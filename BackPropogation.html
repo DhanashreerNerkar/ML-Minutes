@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backpropagation Explained</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 50px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .main-title {
+            font-size: 4.5em;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4, #a8e6cf);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 5s ease infinite;
+        }
+        
+        .subtitle {
+            font-size: 1.6em;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 30px;
+            font-size: 1.3em;
+            text-align: center;
+            margin: 30px 0;
+            border: 3px solid rgba(255, 215, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .analogy-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 3s ease-in-out infinite;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .tab-btn:hover, .tab-btn.active {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .concept-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 35px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .concept-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .concept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #ffd700, #a8e6cf);
+            background-size: 300% 300%;
+            animation: gradient 4s ease infinite;
+        }
+        
+        .concept-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .concept-icon {
+            font-size: 1.5em;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .formula-box {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            padding: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            margin: 25px 0;
+            border: 2px solid rgba(78, 205, 196, 0.4);
+            text-align: center;
+        }
+        
+        .step-by-step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 40px 0;
+        }
+        
+        .steps-title {
+            font-size: 2.2em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 35px;
+            color: #ffd700;
+        }
+        
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .step-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .step-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .step-number {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            color: #333;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin: 0 auto 15px;
+        }
+        
+        .step-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #4ecdc4;
+        }
+        
+        .interactive-demo {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+        }
+        
+        .demo-title {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .neural-network {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+        
+        .layer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .layer-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        
+        .neuron {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .neuron:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+        
+        .neuron.active {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .connection {
+            width: 3px;
+            height: 60px;
+            background: linear-gradient(90deg, #4ecdc4, #a8e6cf);
+            margin: 0 20px;
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .connection.active {
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            animation: flow 1s ease-in-out infinite;
+        }
+        
+        .weight-display {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 1.1em;
+        }
+        
+        .control-value {
+            font-size: 1.3em;
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 15px 0;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+        }
+        
+        .code-example {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            overflow-x: auto;
+        }
+        
+        .code-title {
+            color: #4ecdc4;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .code-line {
+            margin: 8px 0;
+            padding-left: 15px;
+        }
+        
+        .code-comment {
+            color: #a8e6cf;
+            font-style: italic;
+        }
+        
+        .keyword {
+            color: #ff6b6b;
+        }
+        
+        .string {
+            color: #ffd700;
+        }
+        
+        .number {
+            color: #4ecdc4;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .tip-box {
+            background: linear-gradient(45deg, rgba(78, 205, 196, 0.3), rgba(68, 160, 141, 0.3));
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 2px solid rgba(78, 205, 196, 0.5);
+        }
+        
+        .tip-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .tip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .tip-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .tip-item-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+            font-size: 1.1em;
+        }
+        
+        .chain-rule-demo {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .chain-rule-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 25px;
+        }
+        
+        .chain-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .chain-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 120px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .chain-box:hover {
+            transform: scale(1.05);
+            background: rgba(255, 215, 0, 0.3);
+        }
+        
+        .chain-arrow {
+            font-size: 2em;
+            color: #ffd700;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        @keyframes flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 3em;
+            }
+            
+            .concept-grid, .steps-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .neural-network {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .connection {
+                transform: rotate(90deg);
+                width: 60px;
+                height: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="main-title">Backpropagation</div>
+            <div class="subtitle">The Algorithm That Teaches Neural Networks to Learn</div>
+            <div class="analogy-box">
+                <strong>🎯 Learning from Mistakes:</strong><br>
+                Imagine you're learning to throw darts. After each throw, you see where you missed the bullseye 
+                and adjust your aim accordingly. Backpropagation does the same for neural networks!
+            </div>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showSection('concept')">🧠 Core Concept</button>
+            <button class="tab-btn" onclick="showSection('math')">📐 Mathematics</button>
+            <button class="tab-btn" onclick="showSection('visual')">👁️ Visual Demo</button>
+            <button class="tab-btn" onclick="showSection('implementation')">💻 Implementation</button>
+            <button class="tab-btn" onclick="showSection('tips')">💡 Pro Tips</button>
+        </div>
+
+        <!-- Core Concept Section -->
+        <div id="concept" class="content-section active">
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">🎯</div>
+                        What is Backpropagation?
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8;">
+                        Backpropagation is how neural networks learn from their mistakes. It's a method for calculating 
+                        how much each weight and bias contributed to the final error, so we can adjust them to reduce future errors.
+                    </div>
+                    <div style="background: rgba(255,215,0,0.2); padding: 20px; border-radius: 15px; margin: 20px 0;">
+                        <strong>Key Insight:</strong> We work backwards from the output error to figure out 
+                        how to improve each layer's parameters.
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">🔄</div>
+                        The Two-Phase Process
+                    </div>
+                    <div style="font-size: 1.1em;">
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(78,205,196,0.2); border-radius: 10px;">
+                            <strong>📈 Forward Pass:</strong> Data flows forward through the network to make predictions
+                        </div>
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,107,107,0.2); border-radius: 10px;">
+                            <strong>📉 Backward Pass:</strong> Error flows backward to update weights and biases
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-style: italic; margin-top: 20px;">
+                        "Forward to predict, backward to learn!"
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">⚡</div>
+                        Why It's Revolutionary
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8;">
+                        Before backpropagation (1986), training neural networks was nearly impossible for more than 
+                        a few layers. Backpropagation made deep learning possible by efficiently computing gradients 
+                        for networks with many layers.
+                    </div>
+                    <div style="background: rgba(255,215,0,0.2); padding: 20px; border-radius: 15px; margin: 20px 0;">
+                        <strong>Historic Impact:</strong> Enabled the deep learning revolution that powers 
+                        modern AI, from image recognition to language models.
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">🔗</div>
+                        Chain Rule Connection
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8;">
+                        Backpropagation is essentially the chain rule from calculus applied to neural networks. 
+                        It allows us to efficiently compute how the final error depends on each weight in the network.
+                    </div>
+                    <div class="formula-box">
+                        ∂E/∂w = ∂E/∂y × ∂y/∂z × ∂z/∂w
+                    </div>
+                    <div style="text-align: center; font-style: italic; margin-top: 15px;">
+                        "Break down complex derivatives into manageable pieces!"
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-by-step">
+                <div class="steps-title">🚀 Backpropagation Step by Step</div>
+                <div class="steps-container">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Forward Pass</div>
+                        <div>Feed input data through the network layer by layer to compute the final output prediction</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Calculate Loss</div>
+                        <div>Compare the network's prediction with the true target value using a loss function (MSE, cross-entropy, etc.)</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Output Layer Gradients</div>
+                        <div>Calculate how much the loss would change if we slightly adjusted the output layer weights</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Propagate Backwards</div>
+                        <div>Use the chain rule to calculate gradients for each hidden layer, working backwards through the network</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">5</div>
+                        <div class="step-title">Update Weights</div>
+                        <div>Adjust all weights and biases in the direction that reduces the loss using gradient descent</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">6</div>
+                        <div class="step-title">Repeat</div>
+                        <div>Continue this process for many iterations until the network learns the desired mapping</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chain-rule-demo">
+                <div class="chain-rule-title">🔗 Chain Rule in Action</div>
+                <div class="chain-flow">
+                    <div class="chain-box">
+                        <strong>Input</strong><br>
+                        x = 2
+                    </div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-box">
+                        <strong>Linear</strong><br>
+                        z = wx + b
+                    </div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-box">
+                        <strong>Activation</strong><br>
+                        a = σ(z)
+                    </div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-box">
+                        <strong>Loss</strong><br>
+                        L = (a - y)²
+                    </div>
+                </div>
+                <div style="margin-top: 30px; font-size: 1.2em;">
+                    <strong>Chain Rule:</strong> ∂L/∂w = ∂L/∂a × ∂a/∂z × ∂z/∂w
+                </div>
+                <div style="margin-top: 15px; font-style: italic;">
+                    "Each step passes its gradient to the previous step"
+                </div>
+            </div>
+        </div>
+
+        <!-- Mathematics Section -->
+        <div id="math" class="content-section">
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">📐</div>
+                        Forward Pass Mathematics
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8; margin-bottom: 20px;">
+                        In the forward pass, we compute the output of each layer:
+                    </div>
+                    <div class="formula-box">
+                        z⁽ˡ⁾ = W⁽ˡ⁾a⁽ˡ⁻¹⁾ + b⁽ˡ⁾<br><br>
+                        a⁽ˡ⁾ = σ(z⁽ˡ⁾)
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <strong>Where:</strong><br>
+                        • z⁽ˡ⁾ = pre-activation of layer l<br>
+                        • W⁽ˡ⁾ = weight matrix of layer l<br>
+                        • a⁽ˡ⁾ = activation of layer l<br>
+                        • b⁽ˡ⁾ = bias vector of layer l<br>
+                        • σ = activation function
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">📉</div>
+                        Backward Pass Mathematics
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8; margin-bottom: 20px;">
+                        In the backward pass, we compute gradients using the chain rule:
+                    </div>
+                    <div class="formula-box">
+                        δ⁽ˡ⁾ = ∂L/∂z⁽ˡ⁾<br><br>
+                        ∂L/∂W⁽ˡ⁾ = δ⁽ˡ⁾ × (a⁽ˡ⁻¹⁾)ᵀ<br><br>
+                        ∂L/∂b⁽ˡ⁾ = δ⁽ˡ⁾<br><br>
+                        δ⁽ˡ⁻¹⁾ = (W⁽ˡ⁾)ᵀ × δ⁽ˡ⁾ ⊙ σ'(z⁽ˡ⁻¹⁾)
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <strong>Where:</strong><br>
+                        • δ⁽ˡ⁾ = error signal for layer l<br>
+                        • ⊙ = element-wise multiplication<br>
+                        • σ' = derivative of activation function
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">🎯</div>
+                        Output Layer Special Case
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8; margin-bottom: 20px;">
+                        The output layer error depends on the loss function:
+                    </div>
+                    <div class="formula-box">
+                        <strong>MSE Loss:</strong><br>
+                        δ⁽ᴸ⁾ = (a⁽ᴸ⁾ - y) ⊙ σ'(z⁽ᴸ⁾)<br><br>
+                        <strong>Cross-Entropy + Softmax:</strong><br>
+                        δ⁽ᴸ⁾ = a⁽ᴸ⁾ - y
+                    </div>
+                    <div style="margin-top: 20px; font-style: italic;">
+                        The cross-entropy + softmax combination has a beautifully simple derivative!
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">🔄</div>
+                        Common Activation Derivatives
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8;">
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(78,205,196,0.2); border-radius: 10px;">
+                            <strong>ReLU:</strong> σ'(z) = 1 if z > 0, else 0
+                        </div>
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,215,0,0.2); border-radius: 10px;">
+                            <strong>Sigmoid:</strong> σ'(z) = σ(z) × (1 - σ(z))
+                        </div>
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,107,107,0.2); border-radius: 10px;">
+                            <strong>Tanh:</strong> σ'(z) = 1 - tanh²(z)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">
+                    <span>🧮</span>
+                    Mathematical Intuition
+                </div>
+                <div style="font-size: 1.2em; line-height: 1.8;">
+                    <p style="margin-bottom: 20px;">
+                        <strong>The Chain Rule Magic:</strong> Backpropagation breaks down the complex question 
+                        "How does changing this weight affect the final loss?" into simpler questions that can be answered locally at each layer.
+                    </p>
+                    <p style="margin-bottom: 20px;">
+                        <strong>Efficiency:</strong> Instead of computing gradients independently for each weight 
+                        (which would be exponentially expensive), backpropagation reuses computations, making it linear in the number of parameters.
+                    </p>
+                    <p>
+                        <strong>Local Computation:</strong> Each layer only needs to know its inputs, outputs, and the 
+                        error signal from the layer above. This makes the algorithm both elegant and scalable.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Demo Section -->
+        <div id="visual" class="content-section">
+            <div class="interactive-demo">
+                <div class="demo-title">🎮 Interactive Backpropagation</div>
+                <div style="text-align: center; margin-bottom: 25px; font-size: 1.1em;">
+                    Watch how errors propagate backward through the network
+                </div>
+                
+                <div class="neural-network">
+                    <div class="layer">
+                        <div class="layer-title">Input</div>
+                        <div class="neuron" id="input1">x₁</div>
+                        <div class="neuron" id="input2">x₂</div>
+                    </div>
+                    
+                    <div class="connection" id="conn1">
+                        <div class="weight-display" id="weight1">w₁</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">Hidden</div>
+                        <div class="neuron" id="hidden1">h₁</div>
+                        <div class="neuron" id="hidden2">h₂</div>
+                    </div>
+                    
+                    <div class="connection" id="conn2">
+                        <div class="weight-display" id="weight2">w₂</div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">Output</div>
+                        <div class="neuron" id="output1">ŷ</div>
+                    </div>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label class="control-label">
+                            Learning Rate: <span class="control-value" id="learningRateValue">0.1</span>
+                        </label>
+                        <input type="range" id="learningRate" class="slider" 
+                               min="0.01" max="1.0" step="0.01" value="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">
+                            Target Value: <span class="control-value" id="targetValue">1.0</span>
+                        </label>
+                        <input type="range" id="target" class="slider" 
+                               min="0" max="1" step="0.1" value="1.0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">Current Loss</div>
+                        <div class="control-value" id="currentLoss">0.25</div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">Epoch</div>
+                        <div class="control-value" id="currentEpoch">0</div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="runForwardPass()">📈 Forward Pass</button>
+                    <button class="action-btn" onclick="runBackwardPass()">📉 Backward Pass</button>
+                    <button class="action-btn" onclick="trainOneStep()">🎯 Train One Step</button>
+                    <button class="action-btn" onclick="resetNetwork()">🔄 Reset</button>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; margin: 25px 0;">
+                    <div style="text-align: center; margin-bottom: 20px; font-size: 1.2em; font-weight: bold;">
+                        Network Status
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="text-align: center;">
+                            <div style="color: #4ecdc4; font-weight: bold;">Prediction</div>
+                            <div id="prediction" style="font-size: 1.3em;">0.5</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #ffd700; font-weight: bold;">Error</div>
+                            <div id="error" style="font-size: 1.3em;">0.5</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="color: #ff6b6b; font-weight: bold;">Weight Change</div>
+                            <div id="weightChange" style="font-size: 1.3em;">0.0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Section -->
+        <div id="implementation" class="content-section">
+            <div class="code-example">
+                <div class="code-title">🐍 Simple Backpropagation from Scratch</div>
+                <div class="code-line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="keyword">class</span> SimpleNeuralNetwork:</div>
+                <div class="code-line">    <span class="keyword">def</span> __init__(self, input_size, hidden_size, output_size):</div>
+                <div class="code-line">        <span class="code-comment"># Initialize weights randomly</span></div>
+                <div class="code-line">        self.W1 = np.random.randn(input_size, hidden_size) * <span class="number">0.1</span></div>
+                <div class="code-line">        self.b1 = np.zeros((<span class="number">1</span>, hidden_size))</div>
+                <div class="code-line">        self.W2 = np.random.randn(hidden_size, output_size) * <span class="number">0.1</span></div>
+                <div class="code-line">        self.b2 = np.zeros((<span class="number">1</span>, output_size))</div>
+                <div class="code-line">    </div>
+                <div class="code-line">    <span class="keyword">def</span> sigmoid(self, x):</div>
+                <div class="code-line">        <span class="keyword">return</span> <span class="number">1</span> / (<span class="number">1</span> + np.exp(-np.clip(x, -<span class="number">500</span>, <span class="number">500</span>)))</div>
+                <div class="code-line">    </div>
+                <div class="code-line">    <span class="keyword">def</span> sigmoid_derivative(self, x):</div>
+                <div class="code-line">        <span class="keyword">return</span> x * (<span class="number">1</span> - x)</div>
+                <div class="code-line">    </div>
+                <div class="code-line">    <span class="keyword">def</span> forward(self, X):</div>
+                <div class="code-line">        <span class="code-comment"># Forward pass</span></div>
+                <div class="code-line">        self.z1 = np.dot(X, self.W1) + self.b1</div>
+                <div class="code-line">        self.a1 = self.sigmoid(self.z1)</div>
+                <div class="code-line">        self.z2 = np.dot(self.a1, self.W2) + self.b2</div>
+                <div class="code-line">        self.a2 = self.sigmoid(self.z2)</div>
+                <div class="code-line">        <span class="keyword">return</span> self.a2</div>
+                <div class="code-line">    </div>
+                <div class="code-line">    <span class="keyword">def</span> backward(self, X, y, learning_rate):</div>
+                <div class="code-line">        m = X.shape[<span class="number">0</span>]  <span class="code-comment"># Number of examples</span></div>
+                <div class="code-line">        </div>
+                <div class="code-line">        <span class="code-comment"># Backward pass (backpropagation)</span></div>
+                <div class="code-line">        <span class="code-comment"># Output layer</span></div>
+                <div class="code-line">        dz2 = self.a2 - y</div>
+                <div class="code-line">        dW2 = (<span class="number">1</span>/m) * np.dot(self.a1.T, dz2)</div>
+                <div class="code-line">        db2 = (<span class="number">1</span>/m) * np.sum(dz2, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</div>
+                <div class="code-line">        </div>
+                <div class="code-line">        <span class="code-comment"># Hidden layer</span></div>
+                <div class="code-line">        da1 = np.dot(dz2, self.W2.T)</div>
+                <div class="code-line">        dz1 = da1 * self.sigmoid_derivative(self.a1)</div>
+                <div class="code-line">        dW1 = (<span class="number">1</span>/m) * np.dot(X.T, dz1)</div>
+                <div class="code-line">        db1 = (<span class="number">1</span>/m) * np.sum(dz1, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</div>
+                <div class="code-line">        </div>
+                <div class="code-line">        <span class="code-comment"># Update weights</span></div>
+                <div class="code-line">        self.W2 -= learning_rate * dW2</div>
+                <div class="code-line">        self.b2 -= learning_rate * db2</div>
+                <div class="code-line">        self.W1 -= learning_rate * dW1</div>
+                <div class="code-line">        self.b1 -= learning_rate * db1</div>
+                <div class="code-line">    </div>
+                <div class="code-line">    <span class="keyword">def</span> train(self, X, y, epochs, learning_rate):</div>
+                <div class="code-line">        <span class="keyword">for</span> epoch <span class="keyword">in</span> range(epochs):</div>
+                <div class="code-line">            <span class="code-comment"># Forward pass</span></div>
+                <div class="code-line">            output = self.forward(X)</div>
+                <div class="code-line">            </div>
+                <div class="code-line">            <span class="code-comment"># Calculate loss</span></div>
+                <div class="code-line">            loss = np.mean((output - y) ** <span class="number">2</span>)</div>
+                <div class="code-line">            </div>
+                <div class="code-line">            <span class="code-comment"># Backward pass</span></div>
+                <div class="code-line">            self.backward(X, y, learning_rate)</div>
+                <div class="code-line">            </div>
+                <div class="code-line">            <span class="keyword">if</span> epoch % <span class="number">100</span> == <span class="number">0</span>:</div>
+                <div class="code-line">                print(<span class="string">f"Epoch {epoch}, Loss: {loss:.4f}"</span>)</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-title">🔥 TensorFlow Automatic Backpropagation</div>
+                <div class="code-line"><span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># TensorFlow handles backpropagation automatically!</span></div>
+                <div class="code-line">model = tf.keras.Sequential([</div>
+                <div class="code-line">    tf.keras.layers.Dense(<span class="number">64</span>, activation=<span class="string">'relu'</span>, input_shape=(<span class="number">10</span>,)),</div>
+                <div class="code-line">    tf.keras.layers.Dense(<span class="number">32</span>, activation=<span class="string">'relu'</span>),</div>
+                <div class="code-line">    tf.keras.layers.Dense(<span class="number">1</span>, activation=<span class="string">'sigmoid'</span>)</div>
+                <div class="code-line">])</div>
+                <div class="code-line"></div>
+                <div class="code-line">model.compile(</div>
+                <div class="code-line">    optimizer=<span class="string">'adam'</span>,  <span class="code-comment"># Uses backpropagation internally</span></div>
+                <div class="code-line">    loss=<span class="string">'binary_crossentropy'</span>,</div>
+                <div class="code-line">    metrics=[<span class="string">'accuracy'</span>]</div>
+                <div class="code-line">)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Training automatically uses backpropagation</span></div>
+                <div class="code-line">history = model.fit(X_train, y_train, </div>
+                <div class="code-line">                   epochs=<span class="number">100</span>, </div>
+                <div class="code-line">                   validation_data=(X_val, y_val))</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-title">⚡ PyTorch Manual Backpropagation</div>
+                <div class="code-line"><span class="keyword">import</span> torch</div>
+                <div class="code-line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Define model</span></div>
+                <div class="code-line">model = nn.Sequential(</div>
+                <div class="code-line">    nn.Linear(<span class="number">10</span>, <span class="number">64</span>),</div>
+                <div class="code-line">    nn.ReLU(),</div>
+                <div class="code-line">    nn.Linear(<span class="number">64</span>, <span class="number">32</span>),</div>
+                <div class="code-line">    nn.ReLU(),</div>
+                <div class="code-line">    nn.Linear(<span class="number">32</span>, <span class="number">1</span>),</div>
+                <div class="code-line">    nn.Sigmoid()</div>
+                <div class="code-line">)</div>
+                <div class="code-line"></div>
+                <div class="code-line">criterion = nn.BCELoss()</div>
+                <div class="code-line">optimizer = torch.optim.Adam(model.parameters())</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Training loop with explicit backpropagation</span></div>
+                <div class="code-line"><span class="keyword">for</span> epoch <span class="keyword">in</span> range(<span class="number">100</span>):</div>
+                <div class="code-line">    <span class="keyword">for</span> batch_x, batch_y <span class="keyword">in</span> dataloader:</div>
+                <div class="code-line">        <span class="code-comment"># Zero gradients</span></div>
+                <div class="code-line">        optimizer.zero_grad()</div>
+                <div class="code-line">        </div>
+                <div class="code-line">        <span class="code-comment"># Forward pass</span></div>
+                <div class="code-line">        outputs = model(batch_x)</div>
+                <div class="code-line">        loss = criterion(outputs, batch_y)</div>
+                <div class="code-line">        </div>
+                <div class="code-line">        <span class="code-comment"># Backward pass (backpropagation)</span></div>
+                <div class="code-line">        loss.backward()  <span class="code-comment"># This is where the magic happens!</span></div>
+                <div class="code-line">        </div>
+                <div class="code-line">        <span class="code-comment"># Update weights</span></div>
+                <div class="code-line">        optimizer.step()</div>
+            </div>
+        </div>
+
+        <!-- Tips Section -->
+        <div id="tips" class="content-section">
+            <div class="tip-box">
+                <div class="tip-title">
+                    <span>💡</span>
+                    Backpropagation Mastery Guide
+                </div>
+                <div class="tip-grid">
+                    <div class="tip-item">
+                        <div class="tip-item-title">🎯 Understanding the Flow</div>
+                        <div>
+                            • Forward pass: data flows input → output<br>
+                            • Backward pass: gradients flow output → input<br>
+                            • Each layer modifies the gradient signal<br>
+                            • Chain rule connects all the pieces<br>
+                            • Local computations enable global learning
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-item-title">⚠️ Common Issues</div>
+                        <div>
+                            • <strong>Vanishing gradients:</strong> Gradients become too small<br>
+                            • <strong>Exploding gradients:</strong> Gradients become too large<br>
+                            • <strong>Dead neurons:</strong> ReLU neurons stuck at 0<br>
+                            • <strong>Poor initialization:</strong> Breaks gradient flow<br>
+                            • <strong>Wrong learning rate:</strong> Too fast or too slow
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-item-title">🔧 Best Practices</div>
+                        <div>
+                            • Use proper weight initialization (Xavier, He)<br>
+                            • Add batch normalization for stable training<br>
+                            • Monitor gradient norms during training<br>
+                            • Use gradient clipping for RNNs<br>
+                            • Start with small learning rates<br>
+                            • Visualize loss curves
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-item-title">🚀 Advanced Techniques</div>
+                        <div>
+                            • <strong>Gradient accumulation:</strong> Simulate larger batches<br>
+                            • <strong>Mixed precision:</strong> Speed up training<br>
+                            • <strong>Gradient checkpointing:</strong> Save memory<br>
+                            • <strong>Layer-wise learning rates:</strong> Fine-tune different layers<br>
+                            • <strong>Warmup schedules:</strong> Gradual learning rate increase
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-item-title">🎓 Debugging Tips</div>
+                        <div>
+                            • Check gradient magnitudes (should be ~1e-3 to 1e-1)<br>
+                            • Verify gradients with numerical differentiation<br>
+                            • Plot activation distributions per layer<br>
+                            • Monitor weight updates during training<br>
+                            • Test with simple synthetic datasets first
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-item-title">💭 Conceptual Understanding</div>
+                        <div>
+                            • Think of it as "blame assignment"<br>
+                            • Each weight gets blamed proportionally<br>
+                            • Gradients are directions of steepest increase<br>
+                            • We move opposite to gradients (steepest decrease)<br>
+                            • It's just chain rule applied systematically
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin: 30px 0; text-align: center;">
+                <h2 style="color: #ffd700; margin-bottom: 20px;">🎓 The Big Picture</h2>
+                <div style="font-size: 1.2em; line-height: 1.8; max-width: 900px; margin: 0 auto;">
+                    <p style="margin-bottom: 20px;">
+                        <strong>Backpropagation is the engine of deep learning.</strong> Without it, we couldn't train 
+                        neural networks with millions or billions of parameters. It's what makes modern AI possible.
+                    </p>
+                    <p style="margin-bottom: 20px;">
+                        <strong>The beautiful insight:</strong> You don't need to understand every derivative to use 
+                        backpropagation effectively. Modern frameworks handle the math automatically while you focus on architecture and data.
+                    </p>
+                    <p style="margin-bottom: 20px;">
+                        <strong>Key intuition:</strong> Backpropagation is like having a very precise way to assign blame. 
+                        When the network makes an error, backpropagation figures out exactly which weights were most responsible 
+                        and adjusts them accordingly.
+                    </p>
+                    <p>
+                        <strong>Remember:</strong> Every time you call <code>loss.backward()</code> in PyTorch or 
+                        <code>model.fit()</code> in TensorFlow, you're running backpropagation! 🚀
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 'concept';
+        let networkState = {
+            weights: [0.5, -0.3, 0.8, 0.2],
+            prediction: 0.5,
+            target: 1.0,
+            loss: 0.25,
+            epoch: 0,
+            learningRate: 0.1
+        };
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section and activate tab
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+            
+            currentSection = sectionId;
+        }
+
+        function updateNetworkDisplay() {
+            // Update displays
+            document.getElementById('prediction').textContent = networkState.prediction.toFixed(3);
+            document.getElementById('error').textContent = Math.abs(networkState.target - networkState.prediction).toFixed(3);
+            document.getElementById('currentLoss').textContent = networkState.loss.toFixed(3);
+            document.getElementById('currentEpoch').textContent = networkState.epoch;
+            document.getElementById('weightChange').textContent = '±' + (networkState.learningRate * 0.1).toFixed(3);
+        }
+
+        function runForwardPass() {
+            // Clear all active states
+            document.querySelectorAll('.neuron').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.connection').forEach(c => c.classList.remove('active'));
+            
+            // Simulate forward pass animation
+            setTimeout(() => {
+                document.querySelectorAll('#input1, #input2').forEach(n => n.classList.add('active'));
+            }, 100);
+            
+            setTimeout(() => {
+                document.getElementById('conn1').classList.add('active');
+            }, 300);
+            
+            setTimeout(() => {
+                document.querySelectorAll('#hidden1, #hidden2').forEach(n => n.classList.add('active'));
+            }, 500);
+            
+            setTimeout(() => {
+                document.getElementById('conn2').classList.add('active');
+            }, 700);
+            
+            setTimeout(() => {
+                document.getElementById('output1').classList.add('active');
+                // Calculate simple prediction
+                networkState.prediction = Math.random() * 0.4 + 0.3; // Random between 0.3-0.7
+                networkState.loss = Math.pow(networkState.target - networkState.prediction, 2) / 2;
+                updateNetworkDisplay();
+            }, 900);
+        }
+
+        function runBackwardPass() {
+            // Start from output and work backwards
+            setTimeout(() => {
+                document.getElementById('output1').classList.add('active');
+            }, 100);
+            
+            setTimeout(() => {
+                document.getElementById('conn2').classList.add('active');
+            }, 300);
+            
+            setTimeout(() => {
+                document.querySelectorAll('#hidden1, #hidden2').forEach(n => n.classList.add('active'));
+            }, 500);
+            
+            setTimeout(() => {
+                document.getElementById('conn1').classList.add('active');
+            }, 700);
+            
+            setTimeout(() => {
+                document.querySelectorAll('#input1, #input2').forEach(n => n.classList.add('active'));
+            }, 900);
+        }
+
+        function trainOneStep() {
+            runForwardPass();
+            setTimeout(() => {
+                runBackwardPass();
+                // Update weights
+                networkState.weights = networkState.weights.map(w => w + (Math.random() - 0.5) * networkState.learningRate);
+                networkState.epoch += 1;
+                setTimeout(updateNetworkDisplay, 1000);
+            }, 1000);
+        }
+
+        function resetNetwork() {
+            networkState = {
+                weights: [0.5, -0.3, 0.8, 0.2],
+                prediction: 0.5,
+                target: parseFloat(document.getElementById('target').value),
+                loss: 0.25,
+                epoch: 0,
+                learningRate: parseFloat(document.getElementById('learningRate').value)
+            };
+            
+            // Clear all active states
+            document.querySelectorAll('.neuron').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.connection').forEach(c => c.classList.remove('active'));
+            
+            updateNetworkDisplay();
+        }
+
+        // Event listeners for sliders
+        document.getElementById('learningRate').addEventListener('input', function() {
+            networkState.learningRate = parseFloat(this.value);
+            document.getElementById('learningRateValue').textContent = this.value;
+        });
+
+        document.getElementById('target').addEventListener('input', function() {
+            networkState.target = parseFloat(this.value);
+            networkState.loss = Math.pow(networkState.target - networkState.prediction, 2) / 2;
+            document.getElementById('targetValue').textContent = this.value;
+            updateNetworkDisplay();
+        });
+
+        // Initialize
+        updateNetworkDisplay();
+    </script>
+</body>
+</html>
