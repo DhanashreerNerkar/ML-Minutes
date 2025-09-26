@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L2 Loss Explained</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 50px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .main-title {
+            font-size: 4.5em;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 4s ease infinite;
+        }
+        
+        .subtitle {
+            font-size: 1.6em;
+            opacity: 0.95;
+            margin-bottom: 30px;
+        }
+        
+        .concept-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 30px;
+            font-size: 1.3em;
+            text-align: center;
+            margin: 30px 0;
+            border: 3px solid rgba(255, 215, 0, 0.4);
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .tab-btn:hover, .tab-btn.active {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .concept-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 35px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .concept-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .concept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #ffd700);
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+        }
+        
+        .concept-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .concept-icon {
+            font-size: 1.5em;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .formula-box {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            padding: 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.4em;
+            margin: 25px 0;
+            border: 2px solid rgba(78, 205, 196, 0.4);
+            text-align: center;
+        }
+        
+        .interactive-demo {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+        }
+        
+        .demo-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .visualization-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            color: #333;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .loss-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 1.1em;
+        }
+        
+        .control-value {
+            font-size: 1.3em;
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 15px 0;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+        }
+        
+        .comparison-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .loss-comparison-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .loss-comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .loss-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .loss-formula {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .characteristics {
+            margin: 20px 0;
+        }
+        
+        .char-title {
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        
+        .char-item {
+            margin: 8px 0;
+            padding-left: 15px;
+            position: relative;
+            font-size: 0.95em;
+        }
+        
+        .char-item::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #4ecdc4;
+        }
+        
+        .code-example {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            overflow-x: auto;
+        }
+        
+        .code-title {
+            color: #4ecdc4;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .code-line {
+            margin: 8px 0;
+            padding-left: 15px;
+        }
+        
+        .code-comment {
+            color: #a8e6cf;
+            font-style: italic;
+        }
+        
+        .keyword {
+            color: #ff6b6b;
+        }
+        
+        .string {
+            color: #ffd700;
+        }
+        
+        .number {
+            color: #4ecdc4;
+        }
+        
+        .visual-example {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .example-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+        
+        .error-visualization {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .error-example {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .error-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .error-small {
+            color: #4ecdc4;
+        }
+        
+        .error-large {
+            color: #ff6b6b;
+        }
+        
+        .tip-box {
+            background: linear-gradient(45deg, rgba(78, 205, 196, 0.3), rgba(68, 160, 141, 0.3));
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 2px solid rgba(78, 205, 196, 0.5);
+        }
+        
+        .tip-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .tip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .tip-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .tip-item-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+            font-size: 1.1em;
+        }
+        
+        .real-world-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .example-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .example-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .example-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .example-card-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 3em;
+            }
+            
+            .concept-grid, .comparison-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .error-visualization {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="main-title">L2 Loss</div>
+            <div class="subtitle">The Squared Error Loss Function That Powers Machine Learning</div>
+            <div class="concept-box">
+                <strong>Core Idea:</strong> L2 Loss squares the differences between predictions and actual values. 
+                Large errors are penalized much more heavily than small errors!
+            </div>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showSection('basics')">📚 Basics</button>
+            <button class="tab-btn" onclick="showSection('visual')">📊 Visual Demo</button>
+            <button class="tab-btn" onclick="showSection('comparison')">⚖️ vs Other Losses</button>
+            <button class="tab-btn" onclick="showSection('practical')">💻 Implementation</button>
+            <button class="tab-btn" onclick="showSection('applications')">🚀 Applications</button>
+        </div>
+
+        <!-- Basics Section -->
+        <div id="basics" class="content-section active">
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">📐</div>
+                        Mathematical Definition
+                    </div>
+                    <div class="formula-box">
+                        L2 = Σ(yᵢ - ŷᵢ)²<br><br>
+                        <small>or for single prediction:</small><br>
+                        L2 = (y - ŷ)²
+                    </div>
+                    <div style="margin-top: 20px; line-height: 1.7;">
+                        <strong>Where:</strong><br>
+                        • y = actual value<br>
+                        • ŷ = predicted value<br>
+                        • The difference is squared, making all errors positive
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">🎯</div>
+                        Why "L2"?
+                    </div>
+                    <div style="font-size: 1.1em; line-height: 1.8;">
+                        L2 refers to the <strong>L2 norm</strong> (Euclidean distance). When we calculate the distance between 
+                        two points in space, we use the L2 norm:
+                    </div>
+                    <div class="formula-box">
+                        ||x||₂ = √(x₁² + x₂² + ... + xₙ²)
+                    </div>
+                    <div style="margin-top: 15px; font-style: italic; text-align: center;">
+                        "L2 Loss is just the squared L2 distance between predictions and targets!"
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">⚡</div>
+                        Key Properties
+                    </div>
+                    <div style="font-size: 1.1em;">
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(78,205,196,0.2); border-radius: 10px;">
+                            <strong>🔵 Quadratic Growth:</strong> Errors grow quadratically (x²)
+                        </div>
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,215,0,0.2); border-radius: 10px;">
+                            <strong>🟡 Differentiable:</strong> Smooth everywhere, great for optimization
+                        </div>
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255,107,107,0.2); border-radius: 10px;">
+                            <strong>🔴 Outlier Sensitive:</strong> Large errors dominate the loss
+                        </div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-title">
+                        <div class="concept-icon">💡</div>
+                        Intuitive Understanding
+                    </div>
+                    <div class="visual-example">
+                        <div class="example-title">Error Impact Comparison</div>
+                        <div class="error-visualization">
+                            <div class="error-example">
+                                <div class="error-value error-small">1²</div>
+                                <div>Small Error</div>
+                                <div>Loss = 1</div>
+                            </div>
+                            <div style="font-size: 2em; color: #ffd700;">→</div>
+                            <div class="error-example">
+                                <div class="error-value error-large">5²</div>
+                                <div>Large Error</div>
+                                <div>Loss = 25</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; font-weight: bold;">
+                            A 5x larger error results in 25x larger loss!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">
+                    <span>🎓</span>
+                    Why L2 Loss is So Important
+                </div>
+                <div style="font-size: 1.2em; line-height: 1.8;">
+                    <p style="margin-bottom: 20px;">
+                        <strong>Historical Significance:</strong> L2 loss has been used since the 1800s in the method of least squares. 
+                        It has a beautiful geometric interpretation and strong mathematical properties.
+                    </p>
+                    <p style="margin-bottom: 20px;">
+                        <strong>Gaussian Connection:</strong> If your errors follow a normal distribution, minimizing L2 loss 
+                        is equivalent to maximum likelihood estimation.
+                    </p>
+                    <p>
+                        <strong>Optimization Friendly:</strong> The quadratic nature makes it easy to find the global minimum 
+                        using calculus and gradient descent.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Demo Section -->
+        <div id="visual" class="content-section">
+            <div class="interactive-demo">
+                <div class="demo-title">📊 Interactive L2 Loss Visualizer</div>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    Adjust the predicted value to see how L2 loss changes
+                </div>
+                
+                <div class="visualization-container">
+                    <div class="canvas-container">
+                        <canvas id="lossCanvas" class="loss-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label class="control-label">
+                            Actual Value: <span class="control-value" id="actualValue">5</span>
+                        </label>
+                        <input type="range" id="actualSlider" class="slider" 
+                               min="0" max="10" step="0.1" value="5">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">
+                            Predicted Value: <span class="control-value" id="predictedValue">3</span>
+                        </label>
+                        <input type="range" id="predictedSlider" class="slider" 
+                               min="0" max="10" step="0.1" value="3">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">Error</div>
+                        <div class="control-value" id="errorValue">2.0</div>
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">L2 Loss</div>
+                        <div class="control-value" id="lossValue">4.0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-example">
+                <div class="example-title">🎯 Understanding the Quadratic Nature</div>
+                <div id="quadraticDemo" style="background: white; border-radius: 15px; padding: 25px; color: #333; margin: 25px 0;">
+                    <canvas id="quadraticCanvas" width="600" height="300" style="width: 100%; height: 300px;"></canvas>
+                </div>
+                <div style="text-align: center; margin-top: 15px; font-size: 1.1em;">
+                    Notice how the loss curve is a perfect parabola - this is why L2 loss is so optimization-friendly!
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Section -->
+        <div id="comparison" class="content-section">
+            <div class="comparison-section">
+                <div class="loss-comparison-card">
+                    <div class="loss-name">L2 Loss (MSE)</div>
+                    <div class="loss-formula">
+                        L = (y - ŷ)²
+                    </div>
+                    <div class="characteristics">
+                        <div class="char-title">✅ Advantages</div>
+                        <div class="char-item">Smooth and differentiable everywhere</div>
+                        <div class="char-item">Unique global minimum for linear problems</div>
+                        <div class="char-item">Penalizes large errors heavily</div>
+                        <div class="char-item">Well-understood mathematical properties</div>
+                    </div>
+                    <div class="characteristics">
+                        <div class="char-title" style="color: #ff6b6b;">❌ Disadvantages</div>
+                        <div class="char-item">Very sensitive to outliers</div>
+                        <div class="char-item">May not be robust for noisy data</div>
+                        <div class="char-item">All errors contribute, even tiny ones</div>
+                    </div>
+                </div>
+
+                <div class="loss-comparison-card">
+                    <div class="loss-name">L1 Loss (MAE)</div>
+                    <div class="loss-formula">
+                        L = |y - ŷ|
+                    </div>
+                    <div class="characteristics">
+                        <div class="char-title">✅ Advantages</div>
+                        <div class="char-item">Robust to outliers</div>
+                        <div class="char-item">Linear penalty for all errors</div>
+                        <div class="char-item">More interpretable (same units as target)</div>
+                        <div class="char-item">Sparse solutions in some contexts</div>
+                    </div>
+                    <div class="characteristics">
+                        <div class="char-title" style="color: #ff6b6b;">❌ Disadvantages</div>
+                        <div class="char-item">Not differentiable at zero</div>
+                        <div class="char-item">Optimization can be more challenging</div>
+                        <div class="char-item">May not converge as smoothly</div>
+                    </div>
+                </div>
+
+                <div class="loss-comparison-card">
+                    <div class="loss-name">Huber Loss</div>
+                    <div class="loss-formula">
+                        L = ½(y-ŷ)² if |y-ŷ| ≤ δ<br>
+                        δ|y-ŷ| - ½δ² otherwise
+                    </div>
+                    <div class="characteristics">
+                        <div class="char-title">✅ Advantages</div>
+                        <div class="char-item">Combines benefits of L1 and L2</div>
+                        <div class="char-item">Less sensitive to outliers than L2</div>
+                        <div class="char-item">Smoother than L1 near zero</div>
+                        <div class="char-item">Tunable transition point (δ)</div>
+                    </div>
+                    <div class="characteristics">
+                        <div class="char-title" style="color: #ff6b6b;">❌ Disadvantages</div>
+                        <div class="char-item">Additional hyperparameter (δ)</div>
+                        <div class="char-item">More complex to implement</div>
+                        <div class="char-item">Less interpretable than L1/L2</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-example">
+                <div class="example-title">📈 Loss Function Behavior Comparison</div>
+                <div style="background: white; border-radius: 15px; padding: 25px; color: #333; margin: 25px 0;">
+                    <canvas id="comparisonCanvas" width="600" height="400" style="width: 100%; height: 400px;"></canvas>
+                </div>
+                <div style="text-align: center; margin-top: 15px; font-size: 1.1em;">
+                    Compare how different loss functions respond to the same errors
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Section -->
+        <div id="practical" class="content-section">
+            <div class="code-example">
+                <div class="code-title">🐍 Pure Python Implementation</div>
+                <div class="code-line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Simple L2 loss function</span></div>
+                <div class="code-line"><span class="keyword">def</span> l2_loss(y_true, y_pred):</div>
+                <div class="code-line">    <span class="code-comment"># Calculate squared differences</span></div>
+                <div class="code-line">    <span class="keyword">return</span> np.sum((y_true - y_pred) ** <span class="number">2</span>)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Mean Squared Error (average L2 loss)</span></div>
+                <div class="code-line"><span class="keyword">def</span> mse(y_true, y_pred):</div>
+                <div class="code-line">    <span class="keyword">return</span> np.mean((y_true - y_pred) ** <span class="number">2</span>)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Example usage</span></div>
+                <div class="code-line">y_actual = np.array([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>])</div>
+                <div class="code-line">y_predicted = np.array([<span class="number">1.1</span>, <span class="number">1.9</span>, <span class="number">3.2</span>, <span class="number">3.8</span>, <span class="number">5.1</span>])</div>
+                <div class="code-line"></div>
+                <div class="code-line">total_l2_loss = l2_loss(y_actual, y_predicted)</div>
+                <div class="code-line">mean_squared_error = mse(y_actual, y_predicted)</div>
+                <div class="code-line"></div>
+                <div class="code-line">print(<span class="string">f"Total L2 Loss: {total_l2_loss:.4f}"</span>)  <span class="code-comment"># 0.3500</span></div>
+                <div class="code-line">print(<span class="string">f"MSE: {mean_squared_error:.4f}"</span>)  <span class="code-comment"># 0.0700</span></div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-title">🔥 TensorFlow/Keras Implementation</div>
+                <div class="code-line"><span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</div>
+                <div class="code-line"><span class="keyword">from</span> tensorflow.keras <span class="keyword">import</span> layers, models</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Method 1: Built-in MSE loss</span></div>
+                <div class="code-line">model = models.Sequential([</div>
+                <div class="code-line">    layers.Dense(<span class="number">64</span>, activation=<span class="string">'relu'</span>, input_shape=(<span class="number">10</span>,)),</div>
+                <div class="code-line">    layers.Dense(<span class="number">32</span>, activation=<span class="string">'relu'</span>),</div>
+                <div class="code-line">    layers.Dense(<span class="number">1</span>)  <span class="code-comment"># No activation for regression</span></div>
+                <div class="code-line">])</div>
+                <div class="code-line"></div>
+                <div class="code-line">model.compile(</div>
+                <div class="code-line">    optimizer=<span class="string">'adam'</span>,</div>
+                <div class="code-line">    loss=<span class="string">'mse'</span>,  <span class="code-comment"># This is L2 loss!</span></div>
+                <div class="code-line">    metrics=[<span class="string">'mae'</span>]</div>
+                <div class="code-line">)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Method 2: Custom L2 loss function</span></div>
+                <div class="code-line"><span class="keyword">def</span> custom_l2_loss(y_true, y_pred):</div>
+                <div class="code-line">    <span class="keyword">return</span> tf.reduce_mean(tf.square(y_true - y_pred))</div>
+                <div class="code-line"></div>
+                <div class="code-line">model.compile(</div>
+                <div class="code-line">    optimizer=<span class="string">'adam'</span>,</div>
+                <div class="code-line">    loss=custom_l2_loss</div>
+                <div class="code-line">)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Method 3: Using functional API</span></div>
+                <div class="code-line">loss_fn = tf.keras.losses.MeanSquaredError()</div>
+                <div class="code-line">loss_value = loss_fn(y_true, y_pred)</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-title">⚡ PyTorch Implementation</div>
+                <div class="code-line"><span class="keyword">import</span> torch</div>
+                <div class="code-line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</div>
+                <div class="code-line"><span class="keyword">import</span> torch.nn.functional <span class="keyword">as</span> F</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Method 1: Using built-in MSELoss</span></div>
+                <div class="code-line">criterion = nn.MSELoss()</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Example usage</span></div>
+                <div class="code-line">y_true = torch.tensor([<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>])</div>
+                <div class="code-line">y_pred = torch.tensor([<span class="number">1.1</span>, <span class="number">1.9</span>, <span class="number">3.2</span>])</div>
+                <div class="code-line"></div>
+                <div class="code-line">loss = criterion(y_pred, y_true)</div>
+                <div class="code-line">print(<span class="string">f"MSE Loss: {loss.item():.4f}"</span>)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Method 2: Manual implementation</span></div>
+                <div class="code-line"><span class="keyword">def</span> l2_loss_manual(y_true, y_pred):</div>
+                <div class="code-line">    <span class="keyword">return</span> torch.mean((y_true - y_pred) ** <span class="number">2</span>)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># Method 3: Using functional API</span></div>
+                <div class="code-line">loss = F.mse_loss(y_pred, y_true)</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="code-comment"># In training loop</span></div>
+                <div class="code-line"><span class="keyword">for</span> epoch <span class="keyword">in</span> range(<span class="number">100</span>):</div>
+                <div class="code-line">    optimizer.zero_grad()</div>
+                <div class="code-line">    outputs = model(inputs)</div>
+                <div class="code-line">    loss = criterion(outputs, targets)</div>
+                <div class="code-line">    loss.backward()  <span class="code-comment"># L2 loss gradient is 2*(y_pred - y_true)</span></div>
+                <div class="code-line">    optimizer.step()</div>
+            </div>
+        </div>
+
+        <!-- Applications Section -->
+        <div id="applications" class="content-section">
+            <div class="real-world-examples">
+                <div class="example-card">
+                    <div class="example-icon">🏠</div>
+                    <div class="example-card-title">House Price Prediction</div>
+                    <div>
+                        L2 loss is perfect for predicting continuous values like house prices. 
+                        Large prediction errors (off by $100k) are much worse than small errors (off by $5k).
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-icon">📈</div>
+                    <div class="example-card-title">Stock Price Forecasting</div>
+                    <div>
+                        When predicting stock prices, being way off is catastrophic for trading algorithms. 
+                        L2 loss heavily penalizes large prediction mistakes.
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-icon">🌡️</div>
+                    <div class="example-card-title">Temperature Monitoring</div>
+                    <div>
+                        For temperature sensors, small errors are acceptable, but large errors could 
+                        indicate equipment failure. L2 loss helps detect anomalies.
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-icon">🚗</div>
+                    <div class="example-card-title">Autonomous Driving</div>
+                    <div>
+                        When predicting steering angles or distances, small errors are fine, 
+                        but large errors could cause accidents. L2 loss prioritizes accuracy.
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-icon">🔬</div>
+                    <div class="example-card-title">Scientific Measurements</div>
+                    <div>
+                        In scientific experiments, L2 loss connects to maximum likelihood estimation 
+                        when measurement errors follow a normal distribution.
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-icon">🎨</div>
+                    <div class="example-card-title">Image Reconstruction</div>
+                    <div>
+                        In image processing, L2 loss measures pixel-wise differences. 
+                        It ensures reconstructed images are close to the original.
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">
+                    <span>🎯</span>
+                    When to Use L2 Loss
+                </div>
+                <div class="tip-grid">
+                    <div class="tip-item">
+                        <div class="tip-item-title">✅ Use L2 When</div>
+                        <div>
+                            • You want to heavily penalize large errors<br>
+                            • Your data has few outliers<br>
+                            • You need smooth optimization<br>
+                            • Working with Gaussian-distributed errors<br>
+                            • Interpretability of individual errors isn't critical
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-item-title">❌ Avoid L2 When</div>
+                        <div>
+                            • Your data has many outliers<br>
+                            • You want robust predictions<br>
+                            • All errors should be weighted equally<br>
+                            • You need sparse solutions<br>
+                            • Working with highly skewed data
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-item-title">🔧 Pro Tips</div>
+                        <div>
+                            • Consider data preprocessing to handle outliers<br>
+                            • Try Huber loss as a compromise<br>
+                            • Monitor training with validation loss<br>
+                            • Scale features for better optimization<br>
+                            • Use regularization to prevent overfitting
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin: 30px 0; text-align: center;">
+                <h2 style="color: #ffd700; margin-bottom: 20px;">🎓 Key Takeaways</h2>
+                <div style="font-size: 1.2em; line-height: 1.8; max-width: 800px; margin: 0 auto;">
+                    <p style="margin-bottom: 20px;">
+                        <strong>L2 Loss = Mean Squared Error (MSE)</strong> - they're the same thing! 
+                        It's the most common loss function in regression problems.
+                    </p>
+                    <p style="margin-bottom: 20px;">
+                        <strong>Key insight:</strong> L2 loss squares errors, making large mistakes much more costly 
+                        than small ones. This leads to models that avoid big errors at all costs.
+                    </p>
+                    <p>
+                        <strong>Remember:</strong> Great for smooth optimization and when you care more about avoiding 
+                        large errors than achieving perfect accuracy on every prediction! 🎯
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 'basics';
+        let canvas, ctx, quadraticCanvas, quadraticCtx, comparisonCanvas, comparisonCtx;
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section and activate tab
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+            
+            currentSection = sectionId;
+            
+            // Initialize visualizations for specific sections
+            if (sectionId === 'visual') {
+                setTimeout(() => {
+                    initLossCanvas();
+                    initQuadraticCanvas();
+                }, 100);
+            } else if (sectionId === 'comparison') {
+                setTimeout(initComparisonCanvas, 100);
+            }
+        }
+
+        function initLossCanvas() {
+            canvas = document.getElementById('lossCanvas');
+            if (!canvas) return;
+            
+            ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            updateLossVisualization();
+        }
+
+        function initQuadraticCanvas() {
+            quadraticCanvas = document.getElementById('quadraticCanvas');
+            if (!quadraticCanvas) return;
+            
+            quadraticCtx = quadraticCanvas.getContext('2d');
+            const rect = quadraticCanvas.getBoundingClientRect();
+            quadraticCanvas.width = rect.width * window.devicePixelRatio;
+            quadraticCanvas.height = rect.height * window.devicePixelRatio;
+            quadraticCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            drawQuadraticFunction();
+        }
+
+        function initComparisonCanvas() {
+            comparisonCanvas = document.getElementById('comparisonCanvas');
+            if (!comparisonCanvas) return;
+            
+            comparisonCtx = comparisonCanvas.getContext('2d');
+            const rect = comparisonCanvas.getBoundingClientRect();
+            comparisonCanvas.width = rect.width * window.devicePixelRatio;
+            comparisonCanvas.height = rect.height * window.devicePixelRatio;
+            comparisonCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            drawLossComparison();
+        }
+
+        function updateLossVisualization() {
+            if (!ctx) return;
+            
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            
+            const actual = parseFloat(document.getElementById('actualSlider').value);
+            const predicted = parseFloat(document.getElementById('predictedSlider').value);
+            
+            // Clear canvas
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw coordinate system
+            const margin = 50;
+            const chartWidth = width - 2 * margin;
+            const chartHeight = height - 2 * margin;
+            
+            // Axes
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(margin, margin);
+            ctx.lineTo(margin, height - margin);
+            ctx.lineTo(width - margin, height - margin);
+            ctx.stroke();
+            
+            // Scale
+            const maxValue = 10;
+            const scaleX = chartWidth / maxValue;
+            const scaleY = chartHeight / maxValue;
+            
+            // Draw actual value line
+            const actualX = margin + actual * scaleX;
+            ctx.strokeStyle = '#4ecdc4';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(actualX, margin);
+            ctx.lineTo(actualX, height - margin);
+            ctx.stroke();
+            
+            // Draw predicted value line
+            const predictedX = margin + predicted * scaleX;
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(predictedX, margin);
+            ctx.lineTo(predictedX, height - margin);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw error bar
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(actualX, height / 2);
+            ctx.lineTo(predictedX, height / 2);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            
+            ctx.fillStyle = '#4ecdc4';
+            ctx.fillText('Actual', actualX, height - 20);
+            
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillText('Predicted', predictedX, height - 20);
+            
+            // Error calculation
+            const error = Math.abs(actual - predicted);
+            const l2Loss = error * error;
+            
+            // Update displays
+            document.getElementById('actualValue').textContent = actual.toFixed(1);
+            document.getElementById('predictedValue').textContent = predicted.toFixed(1);
+            document.getElementById('errorValue').textContent = error.toFixed(1);
+            document.getElementById('lossValue').textContent = l2Loss.toFixed(1);
+            
+            // Display error value
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Error: ${error.toFixed(1)}`, width / 2, height / 2 - 20);
+            ctx.fillText(`L2 Loss: ${l2Loss.toFixed(1)}`, width / 2, height / 2 + 10);
+        }
+
+        function drawQuadraticFunction() {
+            if (!quadraticCtx) return;
+            
+            const width = quadraticCanvas.width / window.devicePixelRatio;
+            const height = quadraticCanvas.height / window.devicePixelRatio;
+            
+            // Clear canvas
+            quadraticCtx.fillStyle = '#f8f9fa';
+            quadraticCtx.fillRect(0, 0, width, height);
+            
+            // Draw axes
+            const centerX = width / 2;
+            const centerY = height - 50;
+            
+            quadraticCtx.strokeStyle = '#666';
+            quadraticCtx.lineWidth = 2;
+            quadraticCtx.beginPath();
+            quadraticCtx.moveTo(50, centerY);
+            quadraticCtx.lineTo(width - 50, centerY);
+            quadraticCtx.moveTo(centerX, 50);
+            quadraticCtx.lineTo(centerX, height - 50);
+            quadraticCtx.stroke();
+            
+            // Draw parabola
+            quadraticCtx.strokeStyle = '#4ecdc4';
+            quadraticCtx.lineWidth = 3;
+            quadraticCtx.beginPath();
+            
+            for (let x = -5; x <= 5; x += 0.1) {
+                const y = x * x;
+                const canvasX = centerX + x * 30;
+                const canvasY = centerY - y * 8;
+                
+                if (x === -5) {
+                    quadraticCtx.moveTo(canvasX, canvasY);
+                } else {
+                    quadraticCtx.lineTo(canvasX, canvasY);
+                }
+            }
+            quadraticCtx.stroke();
+            
+            // Labels
+            quadraticCtx.fillStyle = '#333';
+            quadraticCtx.font = '14px Arial';
+            quadraticCtx.textAlign = 'center';
+            quadraticCtx.fillText('Error', width - 30, centerY + 20);
+            quadraticCtx.fillText('L2 Loss', 30, 30);
+            quadraticCtx.fillText('f(x) = x²', centerX, 30);
+        }
+
+        function drawLossComparison() {
+            if (!comparisonCtx) return;
+            
+            const width = comparisonCanvas.width / window.devicePixelRatio;
+            const height = comparisonCanvas.height / window.devicePixelRatio;
+            
+            // Clear canvas
+            comparisonCtx.fillStyle = '#f8f9fa';
+            comparisonCtx.fillRect(0, 0, width, height);
+            
+            // Draw axes
+            const centerX = width / 2;
+            const centerY = height - 50;
+            
+            comparisonCtx.strokeStyle = '#666';
+            comparisonCtx.lineWidth = 2;
+            comparisonCtx.beginPath();
+            comparisonCtx.moveTo(50, centerY);
+            comparisonCtx.lineTo(width - 50, centerY);
+            comparisonCtx.moveTo(centerX, 50);
+            comparisonCtx.lineTo(centerX, height - 50);
+            comparisonCtx.stroke();
+            
+            // Draw L2 loss (quadratic)
+            comparisonCtx.strokeStyle = '#ff6b6b';
+            comparisonCtx.lineWidth = 3;
+            comparisonCtx.beginPath();
+            for (let x = -4; x <= 4; x += 0.1) {
+                const y = x * x;
+                const canvasX = centerX + x * 40;
+                const canvasY = centerY - y * 15;
+                if (x === -4) {
+                    comparisonCtx.moveTo(canvasX, canvasY);
+                } else {
+                    comparisonCtx.lineTo(canvasX, canvasY);
+                }
+            }
+            comparisonCtx.stroke();
+            
+            // Draw L1 loss (absolute)
+            comparisonCtx.strokeStyle = '#4ecdc4';
+            comparisonCtx.lineWidth = 3;
+            comparisonCtx.beginPath();
+            for (let x = -4; x <= 4; x += 0.1) {
+                const y = Math.abs(x);
+                const canvasX = centerX + x * 40;
+                const canvasY = centerY - y * 30;
+                if (x === -4) {
+                    comparisonCtx.moveTo(canvasX, canvasY);
+                } else {
+                    comparisonCtx.lineTo(canvasX, canvasY);
+                }
+            }
+            comparisonCtx.stroke();
+            
+            // Legend
+            comparisonCtx.fillStyle = '#ff6b6b';
+            comparisonCtx.fillRect(70, 70, 20, 3);
+            comparisonCtx.fillStyle = '#333';
+            comparisonCtx.font = '14px Arial';
+            comparisonCtx.fillText('L2 Loss (x²)', 100, 80);
+            
+            comparisonCtx.fillStyle = '#4ecdc4';
+            comparisonCtx.fillRect(70, 100, 20, 3);
+            comparisonCtx.fillStyle = '#333';
+            comparisonCtx.fillText('L1 Loss (|x|)', 100, 110);
+            
+            // Labels
+            comparisonCtx.textAlign = 'center';
+            comparisonCtx.fillText('Error', width - 30, centerY + 20);
+            comparisonCtx.fillText('Loss', 30, 30);
+        }
+
+        // Event listeners
+        document.getElementById('actualSlider').addEventListener('input', updateLossVisualization);
+        document.getElementById('predictedSlider').addEventListener('input', updateLossVisualization);
+
+        // Initialize
+        window.addEventListener('load', function() {
+            if (currentSection === 'visual') {
+                setTimeout(() => {
+                    initLossCanvas();
+                    initQuadraticCanvas();
+                }, 100);
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            if (currentSection === 'visual') {
+                setTimeout(() => {
+                    initLossCanvas();
+                    initQuadraticCanvas();
+                }, 100);
+            } else if (currentSection === 'comparison') {
+                setTimeout(initComparisonCanvas, 100);
+            }
+        });
+    </script>
+</body>
+</html>
