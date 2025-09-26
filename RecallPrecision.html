@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recall vs Precision</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .title {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .visual-section {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        .circle-container {
+            text-align: center;
+            margin: 20px;
+        }
+        .circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid white;
+            position: relative;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .actual-positive {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+        .predicted-positive {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        }
+        .overlap {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+            right: -60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            border: 3px solid white;
+        }
+        .venn-container {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            margin: 0 auto 30px;
+        }
+        .venn-circle {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .venn-actual {
+            background: rgba(255, 107, 107, 0.7);
+            left: 0;
+            top: 10px;
+        }
+        .venn-predicted {
+            background: rgba(78, 205, 196, 0.7);
+            right: 0;
+            top: 10px;
+        }
+        .venn-overlap {
+            position: absolute;
+            left: 90px;
+            top: 60px;
+            width: 80px;
+            height: 80px;
+            background: rgba(254, 202, 87, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            border: 2px solid white;
+        }
+        .formula-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .formula {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .example-section {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .example-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .metric-box {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            text-align: center;
+            min-width: 120px;
+        }
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #feca57;
+        }
+        .interactive-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .interactive-btn:hover {
+            transform: scale(1.05);
+        }
+        .scenario {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .scenario.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎯 Recall vs Precision Explained</h1>
+        
+        <div class="venn-container">
+            <div class="venn-circle venn-actual">
+                <span>Actually<br>Positive<br>(100)</span>
+            </div>
+            <div class="venn-circle venn-predicted">
+                <span>Predicted<br>Positive<br>(90)</span>
+            </div>
+            <div class="venn-overlap">
+                <span>True<br>Positives<br>(75)</span>
+            </div>
+        </div>
+
+        <div class="formula-box">
+            <div class="formula">📊 RECALL = True Positives / (True Positives + False Negatives)</div>
+            <div>How many actual positives did we catch?</div>
+            <div class="formula">🎯 PRECISION = True Positives / (True Positives + False Positives)</div>
+            <div>How many of our predictions were correct?</div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="interactive-btn" onclick="showScenario('spam')">📧 Email Spam Example</button>
+            <button class="interactive-btn" onclick="showScenario('cancer')">🏥 Medical Diagnosis Example</button>
+            <button class="interactive-btn" onclick="showScenario('fraud')">💳 Fraud Detection Example</button>
+        </div>
+
+        <div id="spam" class="scenario example-section active">
+            <div class="example-title">📧 Email Spam Detection</div>
+            <p><strong>Scenario:</strong> You have 100 actual spam emails in your dataset</p>
+            <p><strong>Model Results:</strong> Your algorithm flags 90 emails as spam</p>
+            <p><strong>Reality Check:</strong> Of the 90 flagged emails, 75 are actually spam (15 are false positives)</p>
+            
+            <div class="metrics">
+                <div class="metric-box">
+                    <div class="metric-value">75%</div>
+                    <div>RECALL</div>
+                    <div style="font-size: 0.8em;">Caught 75 out of 100 actual spam emails</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">83%</div>
+                    <div>PRECISION</div>
+                    <div style="font-size: 0.8em;">75 correct out of 90 spam predictions</div>
+                </div>
+            </div>
+            <p><strong>Trade-off:</strong> Higher recall = catch more spam but risk blocking legitimate emails. Higher precision = fewer false alarms but might miss some spam.</p>
+        </div>
+
+        <div id="cancer" class="scenario example-section">
+            <div class="example-title">🏥 Cancer Screening</div>
+            <p><strong>Scenario:</strong> Screening 1000 patients, 50 actually have cancer</p>
+            <p><strong>Model Results:</strong> Algorithm flags 80 patients as having cancer</p>
+            <p><strong>Reality Check:</strong> Of the 80 flagged, 45 actually have cancer (35 false positives)</p>
+            
+            <div class="metrics">
+                <div class="metric-box">
+                    <div class="metric-value">90%</div>
+                    <div>RECALL</div>
+                    <div style="font-size: 0.8em;">Detected 45 out of 50 actual cancer cases</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">56%</div>
+                    <div>PRECISION</div>
+                    <div style="font-size: 0.8em;">45 correct out of 80 positive predictions</div>
+                </div>
+            </div>
+            <p><strong>Trade-off:</strong> High recall is crucial (don't miss cancer cases) even if precision is lower (false alarms can be checked with further tests).</p>
+        </div>
+
+        <div id="fraud" class="scenario example-section">
+            <div class="example-title">💳 Credit Card Fraud Detection</div>
+            <p><strong>Scenario:</strong> Out of 10,000 transactions, 100 are actually fraudulent</p>
+            <p><strong>Model Results:</strong> System flags 150 transactions as fraudulent</p>
+            <p><strong>Reality Check:</strong> Of the 150 flagged, 85 are actually fraudulent (65 false positives)</p>
+            
+            <div class="metrics">
+                <div class="metric-box">
+                    <div class="metric-value">85%</div>
+                    <div>RECALL</div>
+                    <div style="font-size: 0.8em;">Caught 85 out of 100 actual fraud cases</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">57%</div>
+                    <div>PRECISION</div>
+                    <div style="font-size: 0.8em;">85 correct out of 150 fraud predictions</div>
+                </div>
+            </div>
+            <p><strong>Trade-off:</strong> Need balance - high recall to catch fraud, but reasonable precision to avoid blocking too many legitimate transactions.</p>
+        </div>
+
+        <div class="formula-box" style="margin-top: 40px;">
+            <h3>🎯 Key Takeaway</h3>
+            <p><strong>Recall</strong> answers: "Of all the actual positives, how many did I find?"</p>
+            <p><strong>Precision</strong> answers: "Of all my positive predictions, how many were correct?"</p>
+            <p><strong>The Trade-off:</strong> Usually can't maximize both - improving one often hurts the other!</p>
+        </div>
+    </div>
+
+    <script>
+        function showScenario(scenario) {
+            // Hide all scenarios
+            const scenarios = document.querySelectorAll('.scenario');
+            scenarios.forEach(s => s.classList.remove('active'));
+            
+            // Show selected scenario
+            document.getElementById(scenario).classList.add('active');
+        }
+    </script>
+</body>
+</html>
