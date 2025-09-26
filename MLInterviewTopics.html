@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Interview Topics Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+        }
+        .main-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .tab-btn:hover, .tab-btn.active {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .content-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .topic-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border-left: 5px solid;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .card-ml { border-left-color: #ff6b6b; }
+        .card-nlp { border-left-color: #4ecdc4; }
+        .card-stats { border-left-color: #feca57; }
+        .card-system { border-left-color: #a8e6cf; }
+        .card-coding { border-left-color: #ff8a80; }
+        .card-business { border-left-color: #b39ddb; }
+        .card-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-icon {
+            font-size: 1.5em;
+        }
+        .subtopic {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 8px 0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        .subtopic-title {
+            font-weight: bold;
+            color: #feca57;
+            margin-bottom: 5px;
+        }
+        .important-badge {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .frequency-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .freq-high { background: #ff6b6b; }
+        .freq-medium { background: #feca57; }
+        .freq-low { background: #4ecdc4; }
+        .quick-tips {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .tips-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .tip-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1em;
+            backdrop-filter: blur(10px);
+        }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="main-title">🚀 ML/NLP/Data Science Interview Guide</h1>
+            <p class="subtitle">Essential topics & terminologies for technical interviews</p>
+        </div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search topics..." oninput="searchTopics()">
+            <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <span class="frequency-indicator freq-high"></span>
+                <span>Very Common (Asked 80%+ interviews)</span>
+            </div>
+            <div class="legend-item">
+                <span class="frequency-indicator freq-medium"></span>
+                <span>Common (Asked 50%+ interviews)</span>
+            </div>
+            <div class="legend-item">
+                <span class="frequency-indicator freq-low"></span>
+                <span>Occasional (Asked 20%+ interviews)</span>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showSection('ml')">🤖 Machine Learning</button>
+            <button class="tab-btn" onclick="showSection('nlp')">💬 NLP</button>
+            <button class="tab-btn" onclick="showSection('stats')">📊 Statistics</button>
+            <button class="tab-btn" onclick="showSection('system')">⚙️ Systems</button>
+            <button class="tab-btn" onclick="showSection('coding')">💻 Coding</button>
+            <button class="tab-btn" onclick="showSection('business')">📈 Business</button>
+        </div>
+
+        <!-- Machine Learning Section -->
+        <div id="ml" class="content-section active">
+            <div class="topic-grid">
+                <div class="topic-card card-ml">
+                    <div class="card-title">
+                        <span class="card-icon">🎯</span>
+                        Core ML Concepts
+                        <span class="important-badge">CRITICAL</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Bias vs Variance</div>
+                        Overfitting, underfitting, bias-variance tradeoff
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Cross-Validation</div>
+                        K-fold, stratified, time-series CV, train/val/test splits
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Regularization</div>
+                        L1/L2 regularization, Ridge, Lasso, Elastic Net
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Feature Engineering</div>
+                        Scaling, encoding, selection, dimensionality reduction
+                    </div>
+                </div>
+
+                <div class="topic-card card-ml">
+                    <div class="card-title">
+                        <span class="card-icon">📈</span>
+                        Evaluation Metrics
+                        <span class="important-badge">VERY HIGH</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Classification Metrics</div>
+                        Accuracy, Precision, Recall, F1-score, AUC-ROC, Confusion Matrix
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Regression Metrics</div>
+                        MSE, RMSE, MAE, R², Adjusted R²
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Ranking Metrics</div>
+                        NDCG, MAP, MRR, Precision@K
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Imbalanced Data</div>
+                        SMOTE, class weights, stratified sampling
+                    </div>
+                </div>
+
+                <div class="topic-card card-ml">
+                    <div class="card-title">
+                        <span class="card-icon">🧠</span>
+                        Algorithms & Models
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Tree-based Models</div>
+                        Decision Trees, Random Forest, XGBoost, LightGBM
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Linear Models</div>
+                        Linear/Logistic Regression, assumptions, interpretability
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Ensemble Methods</div>
+                        Bagging, Boosting, Stacking, Voting classifiers
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Clustering</div>
+                        K-means, Hierarchical, DBSCAN, evaluation metrics
+                    </div>
+                </div>
+
+                <div class="topic-card card-ml">
+                    <div class="card-title">
+                        <span class="card-icon">🔥</span>
+                        Deep Learning
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Neural Network Basics</div>
+                        Backpropagation, activation functions, loss functions
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>CNN Architecture</div>
+                        Convolution, pooling, filters, image classification
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Optimization</div>
+                        SGD, Adam, learning rate scheduling, batch normalization
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Advanced Topics</div>
+                        Transfer learning, dropout, early stopping
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NLP Section -->
+        <div id="nlp" class="content-section">
+            <div class="topic-grid">
+                <div class="topic-card card-nlp">
+                    <div class="card-title">
+                        <span class="card-icon">📝</span>
+                        Text Preprocessing
+                        <span class="important-badge">ESSENTIAL</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Basic Preprocessing</div>
+                        Tokenization, stemming, lemmatization, stop words
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Text Vectorization</div>
+                        Bag of Words, TF-IDF, N-grams
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Advanced Preprocessing</div>
+                        Regex, text normalization, handling special characters
+                    </div>
+                </div>
+
+                <div class="topic-card card-nlp">
+                    <div class="card-title">
+                        <span class="card-icon">🔤</span>
+                        Word Embeddings
+                        <span class="important-badge">CRITICAL</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Word2Vec & GloVe</div>
+                        Skip-gram, CBOW, vector arithmetic, similarity
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Contextual Embeddings</div>
+                        BERT, ELMo, contextual vs static embeddings
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Sentence Embeddings</div>
+                        Sentence-BERT, Universal Sentence Encoder, similarity tasks
+                    </div>
+                </div>
+
+                <div class="topic-card card-nlp">
+                    <div class="card-title">
+                        <span class="card-icon">🤖</span>
+                        Transformers & LLMs
+                        <span class="important-badge">HOT TOPIC</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Attention Mechanism</div>
+                        Self-attention, multi-head attention, positional encoding
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>BERT & Variants</div>
+                        Pre-training, fine-tuning, RoBERTa, DistilBERT
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>GPT Models</div>
+                        Autoregressive generation, prompt engineering
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>RAG & Fine-tuning</div>
+                        Retrieval augmented generation, LoRA, parameter-efficient training
+                    </div>
+                </div>
+
+                <div class="topic-card card-nlp">
+                    <div class="card-title">
+                        <span class="card-icon">📋</span>
+                        NLP Tasks
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Classification Tasks</div>
+                        Sentiment analysis, spam detection, topic classification
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Sequence Tasks</div>
+                        NER, POS tagging, text generation
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Similarity & Search</div>
+                        Semantic search, question answering, document similarity
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div id="stats" class="content-section">
+            <div class="topic-grid">
+                <div class="topic-card card-stats">
+                    <div class="card-title">
+                        <span class="card-icon">📊</span>
+                        Statistical Foundations
+                        <span class="important-badge">FUNDAMENTAL</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Descriptive Statistics</div>
+                        Mean, median, mode, standard deviation, skewness, kurtosis
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Probability Distributions</div>
+                        Normal, binomial, Poisson, exponential distributions
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Central Limit Theorem</div>
+                        Sampling distribution, confidence intervals
+                    </div>
+                </div>
+
+                <div class="topic-card card-stats">
+                    <div class="card-title">
+                        <span class="card-icon">🧪</span>
+                        Hypothesis Testing
+                        <span class="important-badge">COMMON</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>A/B Testing</div>
+                        T-tests, chi-square tests, p-values, Type I/II errors
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Statistical Significance</div>
+                        Power analysis, effect size, multiple testing correction
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Non-parametric Tests</div>
+                        Mann-Whitney U, Kruskal-Wallis, bootstrap methods
+                    </div>
+                </div>
+
+                <div class="topic-card card-stats">
+                    <div class="card-title">
+                        <span class="card-icon">🔗</span>
+                        Correlation & Causation
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Correlation Analysis</div>
+                        Pearson, Spearman correlation, correlation vs causation
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Causal Inference</div>
+                        Confounding variables, randomized controlled trials
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Advanced Causality</div>
+                        Instrumental variables, difference-in-differences
+                    </div>
+                </div>
+
+                <div class="topic-card card-stats">
+                    <div class="card-title">
+                        <span class="card-icon">📈</span>
+                        Bayesian Statistics
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Bayes' Theorem</div>
+                        Prior, posterior, likelihood, Bayesian updating
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Bayesian ML</div>
+                        Naive Bayes, Bayesian networks, MCMC methods
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Systems Section -->
+        <div id="system" class="content-section">
+            <div class="topic-grid">
+                <div class="topic-card card-system">
+                    <div class="card-title">
+                        <span class="card-icon">🏗️</span>
+                        ML System Design
+                        <span class="important-badge">CRITICAL</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Data Pipeline</div>
+                        ETL/ELT, data ingestion, batch vs streaming processing
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Model Serving</div>
+                        REST APIs, model deployment, containerization (Docker)
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Scalability</div>
+                        Horizontal vs vertical scaling, load balancing
+                    </div>
+                </div>
+
+                <div class="topic-card card-system">
+                    <div class="card-title">
+                        <span class="card-icon">🔄</span>
+                        MLOps & Production
+                        <span class="important-badge">TRENDING</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Model Monitoring</div>
+                        Data drift, model drift, performance monitoring
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>CI/CD for ML</div>
+                        Version control, automated testing, deployment pipelines
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Experiment Tracking</div>
+                        MLflow, Weights & Biases, model versioning
+                    </div>
+                </div>
+
+                <div class="topic-card card-system">
+                    <div class="card-title">
+                        <span class="card-icon">💾</span>
+                        Data Storage & Processing
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Database Types</div>
+                        SQL vs NoSQL, OLTP vs OLAP, data lakes vs warehouses
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Big Data Tools</div>
+                        Spark, Hadoop, distributed computing concepts
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Cloud Platforms</div>
+                        AWS/GCP/Azure ML services, serverless computing
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coding Section -->
+        <div id="coding" class="content-section">
+            <div class="topic-grid">
+                <div class="topic-card card-coding">
+                    <div class="card-title">
+                        <span class="card-icon">🐍</span>
+                        Python for ML/DS
+                        <span class="important-badge">ESSENTIAL</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Core Libraries</div>
+                        NumPy, Pandas, Matplotlib, Seaborn proficiency
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>ML Libraries</div>
+                        Scikit-learn, TensorFlow, PyTorch basics
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Data Manipulation</div>
+                        DataFrames, group operations, merging, reshaping
+                    </div>
+                </div>
+
+                <div class="topic-card card-coding">
+                    <div class="card-title">
+                        <span class="card-icon">💻</span>
+                        Programming Concepts
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Algorithm Complexity</div>
+                        Big O notation, time vs space complexity
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Data Structures</div>
+                        Arrays, lists, dictionaries, hash tables, trees
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Object-Oriented Programming</div>
+                        Classes, inheritance, encapsulation, polymorphism
+                    </div>
+                </div>
+
+                <div class="topic-card card-coding">
+                    <div class="card-title">
+                        <span class="card-icon">🔍</span>
+                        Common Coding Problems
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Data Processing</div>
+                        Write functions to clean/transform data, handle missing values
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Algorithm Implementation</div>
+                        Implement ML algorithms from scratch (linear regression, k-means)
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>SQL Queries</div>
+                        Joins, aggregations, window functions, CTEs
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Section -->
+        <div id="business" class="content-section">
+            <div class="topic-grid">
+                <div class="topic-card card-business">
+                    <div class="card-title">
+                        <span class="card-icon">🎯</span>
+                        Business Impact
+                        <span class="important-badge">CRITICAL</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Problem Framing</div>
+                        Translate business problems to ML problems, success metrics
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>ROI & Cost-Benefit</div>
+                        Calculate model value, trade-offs, resource allocation
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Stakeholder Communication</div>
+                        Explain technical concepts to non-technical audiences
+                    </div>
+                </div>
+
+                <div class="topic-card card-business">
+                    <div class="card-title">
+                        <span class="card-icon">⚖️</span>
+                        Ethics & Fairness
+                        <span class="important-badge">TRENDING</span>
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Algorithmic Bias</div>
+                        Fairness metrics, bias detection and mitigation
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Privacy & Security</div>
+                        GDPR, data anonymization, differential privacy
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-low"></span>Interpretability</div>
+                        LIME, SHAP, model explainability requirements
+                    </div>
+                </div>
+
+                <div class="topic-card card-business">
+                    <div class="card-title">
+                        <span class="card-icon">📊</span>
+                        Product Analytics
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-high"></span>Key Metrics</div>
+                        KPIs, conversion rates, retention, cohort analysis
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Experimentation</div>
+                        A/B testing design, statistical power, sample size
+                    </div>
+                    <div class="subtopic">
+                        <div class="subtopic-title"><span class="frequency-indicator freq-medium"></span>Growth Analytics</div>
+                        User acquisition, churn prediction, LTV modeling
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-tips">
+            <div class="tips-title">🎯 Interview Success Tips</div>
+            <div class="tips-grid">
+                <div class="tip-item">
+                    <strong>📚 Study Strategy</strong><br>
+                    Focus on high-frequency topics first, then expand to medium frequency
+                </div>
+                <div class="tip-item">
+                    <strong>🗣️ Communication</strong><br>
+                    Practice explaining complex concepts in simple terms with examples
+                </div>
+                <div class="tip-item">
+                    <strong>💡 Problem Solving</strong><br>
+                    Always ask clarifying questions and think aloud during technical problems
+                </div>
+                <div class="tip-item">
+                    <strong>🛠️ Hands-on Practice</strong><br>
+                    Build end-to-end projects and be ready to discuss trade-offs you made
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section and activate tab
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function searchTopics() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.topic-card');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    // Highlight matching text
+                    if (searchTerm) {
+                        card.style.border = '2px solid #feca57';
+                    } else {
+                        card.style.border = 'none';
+                    }
+                } else {
+                    card.style.display = searchTerm ? 'none' : 'block';
+                    card.style.border = 'none';
+                }
+            });
+        }
+
+        // Add some interactive hover effects
+        document.querySelectorAll('.subtopic').forEach(subtopic => {
+            subtopic.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateX(5px)';
+                this.style.transition = 'transform 0.2s ease';
+            });
+            
+            subtopic.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateX(0)';
+            });
+        });
+    </script>
+</body>
+</html>
