@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NN Components: How They Work Together</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 50px;
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .main-title {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.4);
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 4s ease infinite;
+        }
+        
+        .subtitle {
+            font-size: 1.4em;
+            opacity: 0.95;
+            margin-bottom: 25px;
+        }
+        
+        .overview-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 25px;
+            font-size: 1.1em;
+            text-align: center;
+            margin: 25px 0;
+            border: 3px solid rgba(255, 215, 0, 0.4);
+        }
+        
+        .training-cycle {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            position: relative;
+        }
+        
+        .cycle-title {
+            font-size: 2.2em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffd700;
+        }
+        
+        .training-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .step-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+        
+        .step-box.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+            transform: scale(1.05);
+        }
+        
+        .step-box.forward { border-color: #4ecdc4; }
+        .step-box.loss { border-color: #ff6b6b; }
+        .step-box.backprop { border-color: #ffd700; }
+        .step-box.gradient-descent { border-color: #a8e6cf; }
+        
+        .step-number {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            color: #333;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 0 auto 15px;
+        }
+        
+        .step-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+        
+        .step-description {
+            font-size: 1em;
+            line-height: 1.6;
+        }
+        
+        .interactive-demo {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 35px;
+            margin: 30px 0;
+        }
+        
+        .demo-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .neural-network-viz {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+        
+        .layer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .layer-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        
+        .neuron {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .neuron:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+        
+        .neuron.active {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            animation: pulse 1s ease-in-out;
+        }
+        
+        .connection-line {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #4ecdc4, #a8e6cf);
+            margin: 0 15px;
+            border-radius: 2px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .connection-line.active {
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            height: 4px;
+            animation: flow 1s ease-in-out;
+        }
+        
+        .weight-label {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 3px 6px;
+            border-radius: 8px;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+        
+        .loss-visualization {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            color: #333;
+        }
+        
+        .loss-canvas {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+        }
+        
+        .controls-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .control-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+        
+        .control-value {
+            font-size: 1.2em;
+            color: #4ecdc4;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 10px 0;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffd700;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .action-btn.forward-btn { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        .action-btn.loss-btn { background: linear-gradient(45deg, #ff6b6b, #ee5a52); }
+        .action-btn.backprop-btn { background: linear-gradient(45deg, #ffd700, #ffb347); }
+        .action-btn.gd-btn { background: linear-gradient(45deg, #a8e6cf, #88d8a3); }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .info-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+        
+        .connection-explanation {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .explanation-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid;
+        }
+        
+        .explanation-card.loss-card { border-left-color: #ff6b6b; }
+        .explanation-card.backprop-card { border-left-color: #ffd700; }
+        .explanation-card.gd-card { border-left-color: #4ecdc4; }
+        
+        .card-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .math-flow {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+        
+        .flow-step {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+        
+        .flow-arrow {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin: 10px 0;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2.5em;
+            }
+            
+            .training-steps, .connection-explanation {
+                grid-template-columns: 1fr;
+            }
+            
+            .neural-network-viz {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .connection-line {
+                transform: rotate(90deg);
+                width: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="main-title">Neural Network Components</div>
+            <div class="subtitle">How Backpropagation, Gradient Descent, and Loss Functions Work Together</div>
+            <div class="overview-box">
+                <strong>🎯 The Big Picture:</strong><br>
+                Loss Functions measure mistakes → Backpropagation finds who's to blame → Gradient Descent fixes the problems
+            </div>
+        </div>
+        
+        <div class="training-cycle">
+            <div class="cycle-title">🔄 The Complete Training Cycle</div>
+            <div class="training-steps">
+                <div class="step-box forward" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Forward Pass</div>
+                    <div class="step-description">
+                        Input data flows through the network layers to produce a prediction
+                    </div>
+                </div>
+                
+                <div class="step-box loss" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Loss Calculation</div>
+                    <div class="step-description">
+                        <strong>L1/L2 Loss Functions</strong> compare prediction vs actual target to measure the error
+                    </div>
+                </div>
+                
+                <div class="step-box backprop" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Backpropagation</div>
+                    <div class="step-description">
+                        Calculates how much each weight contributed to the error using the <strong>chain rule</strong>
+                    </div>
+                </div>
+                
+                <div class="step-box gradient-descent" id="step4">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Gradient Descent</div>
+                    <div class="step-description">
+                        Updates weights in the direction that reduces the loss: <strong>w = w - α × ∇w</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; font-size: 1.2em; margin-top: 30px; font-style: italic;">
+                This cycle repeats thousands of times until the network learns the desired mapping!
+            </div>
+        </div>
+        
+        <div class="interactive-demo">
+            <div class="demo-title">🎮 Interactive Neural Network Training</div>
+            <div style="text-align: center; margin-bottom: 25px; font-size: 1.1em;">
+                Watch how all components work together in real-time
+            </div>
+            
+            <div class="neural-network-viz">
+                <div class="layer-section">
+                    <div class="layer-title">Input Layer</div>
+                    <div class="neuron" id="input1">x₁</div>
+                    <div class="neuron" id="input2">x₂</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">
+                        Values: <span id="inputValues">[2.0, 1.5]</span>
+                    </div>
+                </div>
+                
+                <div class="connection-line" id="conn1">
+                    <div class="weight-label" id="weight1">w₁=0.3</div>
+                </div>
+                
+                <div class="layer-section">
+                    <div class="layer-title">Hidden Layer</div>
+                    <div class="neuron" id="hidden1">h₁</div>
+                    <div class="neuron" id="hidden2">h₂</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">
+                        Values: <span id="hiddenValues">[0.8, 0.6]</span>
+                    </div>
+                </div>
+                
+                <div class="connection-line" id="conn2">
+                    <div class="weight-label" id="weight2">w₂=0.7</div>
+                </div>
+                
+                <div class="layer-section">
+                    <div class="layer-title">Output Layer</div>
+                    <div class="neuron" id="output1">ŷ</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">
+                        Prediction: <span id="prediction">0.65</span><br>
+                        Target: <span id="target">1.0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <div class="control-panel">
+                    <div class="control-title">Loss Function</div>
+                    <select id="lossFunction" style="width: 100%; padding: 8px; border-radius: 5px; margin: 10px 0;">
+                        <option value="l2">L2 Loss (MSE)</option>
+                        <option value="l1">L1 Loss (MAE)</option>
+                    </select>
+                    <div class="control-value" id="lossValue">0.122</div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="control-title">Learning Rate</div>
+                    <input type="range" id="learningRate" class="slider" min="0.01" max="1.0" step="0.01" value="0.1">
+                    <div class="control-value" id="learningRateValue">0.1</div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="control-title">Target Value</div>
+                    <input type="range" id="targetSlider" class="slider" min="0" max="2" step="0.1" value="1.0">
+                    <div class="control-value" id="targetValue">1.0</div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="control-title">Training Progress</div>
+                    <div class="control-value">
+                        Epoch: <span id="epoch">0</span><br>
+                        Loss: <span id="currentLoss">0.122</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn forward-btn" onclick="runForwardPass()">📈 1. Forward Pass</button>
+                <button class="action-btn loss-btn" onclick="calculateLoss()">📊 2. Calculate Loss</button>
+                <button class="action-btn backprop-btn" onclick="runBackpropagation()">📉 3. Backpropagation</button>
+                <button class="action-btn gd-btn" onclick="runGradientDescent()">⚡ 4. Gradient Descent</button>
+                <button class="action-btn" onclick="runFullTrainingStep()" style="background: linear-gradient(45deg, #ff6b6b, #ffd700);">🚀 Full Training Step</button>
+                <button class="action-btn" onclick="resetNetwork()">🔄 Reset</button>
+            </div>
+            
+            <div class="loss-visualization">
+                <canvas id="lossCanvas" class="loss-canvas"></canvas>
+            </div>
+        </div>
+        
+        <div class="connection-explanation">
+            <div class="explanation-card loss-card">
+                <div class="card-title">🎯 Loss Functions Role</div>
+                <div>
+                    <strong>L2 Loss (MSE):</strong> Loss = (ŷ - y)²<br>
+                    • Heavily penalizes large errors<br>
+                    • Smooth gradient for optimization<br>
+                    • Good for regression problems<br><br>
+                    
+                    <strong>L1 Loss (MAE):</strong> Loss = |ŷ - y|<br>
+                    • Linear penalty for all errors<br>
+                    • Robust to outliers<br>
+                    • Creates sparse solutions
+                </div>
+            </div>
+            
+            <div class="explanation-card backprop-card">
+                <div class="card-title">🔗 Backpropagation Role</div>
+                <div>
+                    <strong>Purpose:</strong> Calculate gradients efficiently<br><br>
+                    <strong>How it works:</strong><br>
+                    • Uses chain rule: ∂L/∂w = ∂L/∂y × ∂y/∂w<br>
+                    • Propagates error backwards layer by layer<br>
+                    • Determines how much each weight contributed to the loss<br>
+                    • Provides gradients for gradient descent
+                </div>
+            </div>
+            
+            <div class="explanation-card gd-card">
+                <div class="card-title">⚡ Gradient Descent Role</div>
+                <div>
+                    <strong>Purpose:</strong> Update weights to minimize loss<br><br>
+                    <strong>Update rule:</strong><br>
+                    w_new = w_old - α × ∇w<br><br>
+                    <strong>Where:</strong><br>
+                    • α = learning rate (step size)<br>
+                    • ∇w = gradient from backpropagation<br>
+                    • Direction: opposite to gradient (downhill)
+                </div>
+            </div>
+        </div>
+        
+        <div class="math-flow">
+            <div style="font-size: 1.4em; font-weight: bold; margin-bottom: 20px; color: #ffd700;">
+                🧮 Mathematical Flow: How They Connect
+            </div>
+            
+            <div class="flow-step">
+                <strong>1. Forward Pass:</strong> ŷ = f(x; w) = σ(w₂ × σ(w₁ × x + b₁) + b₂)
+            </div>
+            <div class="flow-arrow">⬇️</div>
+            
+            <div class="flow-step">
+                <strong>2. Loss Calculation:</strong><br>
+                L2: Loss = ½(ŷ - y)² &nbsp;&nbsp;|&nbsp;&nbsp; L1: Loss = |ŷ - y|
+            </div>
+            <div class="flow-arrow">⬇️</div>
+            
+            <div class="flow-step">
+                <strong>3. Backpropagation:</strong><br>
+                ∂Loss/∂w₂ = (ŷ - y) × h₁ &nbsp;&nbsp; (chain rule applied)
+            </div>
+            <div class="flow-arrow">⬇️</div>
+            
+            <div class="flow-step">
+                <strong>4. Gradient Descent:</strong><br>
+                w₂ = w₂ - α × ∂Loss/∂w₂ &nbsp;&nbsp; (weight update)
+            </div>
+            <div class="flow-arrow">⬇️</div>
+            
+            <div class="flow-step">
+                <strong>Result:</strong> Network learns better weights → Lower loss → Better predictions!
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-title">🎓 Key Insights: How They Work Together</div>
+            <div style="font-size: 1.1em; line-height: 1.8;">
+                <p style="margin-bottom: 15px;">
+                    <strong>1. Loss Functions are the "Goal Setter":</strong> They define what "good" means by measuring 
+                    how far off our predictions are. L2 loss says "big mistakes are really bad", while L1 loss treats all mistakes equally.
+                </p>
+                <p style="margin-bottom: 15px;">
+                    <strong>2. Backpropagation is the "Detective":</strong> It figures out exactly which weights 
+                    are responsible for the error. It's like CSI for neural networks - tracking down the culprits!
+                </p>
+                <p style="margin-bottom: 15px;">
+                    <strong>3. Gradient Descent is the "Fixer":</strong> Once backpropagation identifies the problematic 
+                    weights, gradient descent adjusts them in the right direction to reduce future errors.
+                </p>
+                <p>
+                    <strong>4. The Beautiful Cycle:</strong> This process repeats thousands of times. Each iteration, 
+                    the network gets slightly better at its task. It's like a student doing homework - make mistake, 
+                    learn from it, improve, repeat!
+                </p>
+            </div>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin: 30px 0; text-align: center;">
+            <h2 style="color: #ffd700; margin-bottom: 20px;">🎯 The Bottom Line</h2>
+            <div style="font-size: 1.2em; line-height: 1.8; max-width: 800px; margin: 0 auto;">
+                <p style="margin-bottom: 20px;">
+                    <strong>They're inseparable teammates:</strong> Loss functions measure the problem, 
+                    backpropagation diagnoses the cause, and gradient descent implements the solution.
+                </p>
+                <p>
+                    <strong>Every time you train a neural network</strong>, this trio is working together behind 
+                    the scenes, whether you're using TensorFlow, PyTorch, or any other framework! 🚀
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Network state
+        let networkState = {
+            weights: { w1: 0.3, w2: 0.7, b1: 0.1, b2: 0.2 },
+            inputs: [2.0, 1.5],
+            hiddenValues: [0.8, 0.6],
+            prediction: 0.65,
+            target: 1.0,
+            loss: 0.122,
+            learningRate: 0.1,
+            lossType: 'l2',
+            epoch: 0,
+            lossHistory: []
+        };
+
+        // Activation function (sigmoid)
+        function sigmoid(x) {
+            return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, x))));
+        }
+
+        function updateDisplay() {
+            document.getElementById('inputValues').textContent = 
+                `[${networkState.inputs[0].toFixed(1)}, ${networkState.inputs[1].toFixed(1)}]`;
+            document.getElementById('hiddenValues').textContent = 
+                `[${networkState.hiddenValues[0].toFixed(2)}, ${networkState.hiddenValues[1].toFixed(2)}]`;
+            document.getElementById('prediction').textContent = networkState.prediction.toFixed(3);
+            document.getElementById('target').textContent = networkState.target.toFixed(1);
+            document.getElementById('lossValue').textContent = networkState.loss.toFixed(4);
+            document.getElementById('currentLoss').textContent = networkState.loss.toFixed(4);
+            document.getElementById('epoch').textContent = networkState.epoch;
+            document.getElementById('weight1').textContent = `w₁=${networkState.weights.w1.toFixed(2)}`;
+            document.getElementById('weight2').textContent = `w₂=${networkState.weights.w2.toFixed(2)}`;
+            
+            drawLossGraph();
+        }
+
+        function runForwardPass() {
+            // Highlight forward pass step
+            highlightStep(1);
+            
+            // Animate neurons
+            clearAnimations();
+            setTimeout(() => {
+                document.getElementById('input1').classList.add('active');
+                document.getElementById('input2').classList.add('active');
+            }, 100);
+            
+            setTimeout(() => {
+                document.getElementById('conn1').classList.add('active');
+            }, 300);
+            
+            setTimeout(() => {
+                // Calculate hidden layer values
+                const h1 = sigmoid(networkState.inputs[0] * networkState.weights.w1 + 
+                                  networkState.inputs[1] * networkState.weights.w1 + networkState.weights.b1);
+                const h2 = sigmoid(networkState.inputs[0] * networkState.weights.w1 + 
+                                  networkState.inputs[1] * networkState.weights.w1 + networkState.weights.b1);
+                
+                networkState.hiddenValues = [h1, h2];
+                
+                document.getElementById('hidden1').classList.add('active');
+                document.getElementById('hidden2').classList.add('active');
+            }, 500);
+            
+            setTimeout(() => {
+                document.getElementById('conn2').classList.add('active');
+            }, 700);
+            
+            setTimeout(() => {
+                // Calculate output
+                networkState.prediction = sigmoid(
+                    networkState.hiddenValues[0] * networkState.weights.w2 + 
+                    networkState.hiddenValues[1] * networkState.weights.w2 + networkState.weights.b2
+                );
+                
+                document.getElementById('output1').classList.add('active');
+                updateDisplay();
+            }, 900);
+        }
+
+        function calculateLoss() {
+            highlightStep(2);
+            
+            const error = networkState.prediction - networkState.target;
+            
+            if (networkState.lossType === 'l2') {
+                networkState.loss = 0.5 * error * error; // L2 loss
+            } else {
+                networkState.loss = Math.abs(error); // L1 loss
+            }
+            
+            updateDisplay();
+            
+            // Visual feedback
+            document.getElementById('output1').style.background = 
+                networkState.loss > 0.1 ? 'linear-gradient(45deg, #ff6b6b, #ee5a52)' : 
+                'linear-gradient(45deg, #4ecdc4, #44a08d)';
+            
+            setTimeout(() => {
+                document.getElementById('output1').style.background = 
+                    'linear-gradient(45deg, #667eea, #764ba2)';
+            }, 1000);
+        }
+
+        function runBackpropagation() {
+            highlightStep(3);
+            
+            // Visual: highlight connections in reverse
+            clearAnimations();
+            
+            setTimeout(() => {
+                document.getElementById('output1').classList.add('active');
+            }, 100);
+            
+            setTimeout(() => {
+                document.getElementById('conn2').classList.add('active');
+            }, 300);
+            
+            setTimeout(() => {
+                document.getElementById('hidden1').classList.add('active');
+                document.getElementById('hidden2').classList.add('active');
+            }, 500);
+            
+            setTimeout(() => {
+                document.getElementById('conn1').classList.add('active');
+            }, 700);
+            
+            setTimeout(() => {
+                document.getElementById('input1').classList.add('active');
+                document.getElementById('input2').classList.add('active');
+            }, 900);
+            
+            // Calculate gradients (simplified)
+            const error = networkState.prediction - networkState.target;
+            networkState.gradients = {
+                w2: error * networkState.hiddenValues[0], // Simplified gradient
+                w1: error * networkState.weights.w2 * networkState.inputs[0]
+            };
+        }
+
+        function runGradientDescent() {
+            highlightStep(4);
+            
+            // Update weights
+            networkState.weights.w2 -= networkState.learningRate * networkState.gradients.w2;
+            networkState.weights.w1 -= networkState.learningRate * networkState.gradients.w1;
+            
+            // Visual feedback - flash the weights
+            document.getElementById('weight1').style.background = '#ffd700';
+            document.getElementById('weight2').style.background = '#ffd700';
+            
+            setTimeout(() => {
+                document.getElementById('weight1').style.background = 'rgba(0,0,0,0.8)';
+                document.getElementById('weight2').style.background = 'rgba(0,0,0,0.8)';
+                updateDisplay();
+            }, 500);
+        }
+
+        function runFullTrainingStep() {
+            networkState.epoch += 1;
+            
+            runForwardPass();
+            setTimeout(() => {
+                calculateLoss();
+                setTimeout(() => {
+                    runBackpropagation();
+                    setTimeout(() => {
+                        runGradientDescent();
+                        networkState.lossHistory.push(networkState.loss);
+                        if (networkState.lossHistory.length > 50) {
+                            networkState.lossHistory.shift();
+                        }
+                    }, 1000);
+                }, 1000);
+            }, 1000);
+        }
+
+        function resetNetwork() {
+            networkState = {
+                weights: { w1: 0.3, w2: 0.7, b1: 0.1, b2: 0.2 },
+                inputs: [2.0, 1.5],
+                hiddenValues: [0.8, 0.6],
+                prediction: 0.65,
+                target: parseFloat(document.getElementById('targetSlider').value),
+                loss: 0.122,
+                learningRate: parseFloat(document.getElementById('learningRate').value),
+                lossType: document.getElementById('lossFunction').value,
+                epoch: 0,
+                lossHistory: []
+            };
+            
+            clearAnimations();
+            clearHighlights();
+            updateDisplay();
+        }
+
+        function highlightStep(step) {
+            clearHighlights();
+            document.getElementById(`step${step}`).classList.add('active');
+            setTimeout(() => {
+                document.getElementById(`step${step}`).classList.remove('active');
+            }, 2000);
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.step-box').forEach(box => {
+                box.classList.remove('active');
+            });
+        }
+
+        function clearAnimations() {
+            document.querySelectorAll('.neuron').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.connection-line').forEach(c => c.classList.remove('active'));
+        }
+
+        function drawLossGraph() {
+            const canvas = document.getElementById('lossCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            
+            // Clear canvas
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, height - 50);
+            ctx.lineTo(width - 20, height - 50);
+            ctx.moveTo(50, height - 50);
+            ctx.lineTo(50, 20);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('Epochs', width / 2 - 20, height - 10);
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Loss', 0, 0);
+            ctx.restore();
+            
+            // Draw loss curve if we have data
+            if (networkState.lossHistory.length > 1) {
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                for (let i = 0; i < networkState.lossHistory.length; i++) {
+                    const x = 50 + (i / (networkState.lossHistory.length - 1)) * (width - 70);
+                    const y = height - 50 - (networkState.lossHistory[i] / Math.max(...networkState.lossHistory)) * (height - 70);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+            
+            // Current loss point
+            const currentX = width - 50;
+            const currentY = height - 50 - (networkState.loss / Math.max(networkState.loss, 0.5)) * (height - 70);
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Loss value text
+            ctx.fillStyle = '#333';
+            ctx.fillText(`Current Loss: ${networkState.loss.toFixed(4)}`, width - 150, 30);
+        }
+
+        // Event listeners
+        document.getElementById('learningRate').addEventListener('input', function() {
+            networkState.learningRate = parseFloat(this.value);
+            document.getElementById('learningRateValue').textContent = this.value;
+        });
+
+        document.getElementById('targetSlider').addEventListener('input', function() {
+            networkState.target = parseFloat(this.value);
+            document.getElementById('targetValue').textContent = this.value;
+            updateDisplay();
+        });
+
+        document.getElementById('lossFunction').addEventListener('change', function() {
+            networkState.lossType = this.value;
+            calculateLoss();
+        });
+
+        // Initialize
+        updateDisplay();
+        
+        // Auto-train demo
+        let autoTraining = false;
+        function startAutoTraining() {
+            if (!autoTraining) {
+                autoTraining = true;
+                const interval = setInterval(() => {
+                    if (networkState.epoch < 20 && autoTraining) {
+                        runFullTrainingStep();
+                    } else {
+                        autoTraining = false;
+                        clearInterval(interval);
+                    }
+                }, 4000);
+            }
+        }
+        
+        // Add auto-training button
+        setTimeout(() => {
+            const autoBtn = document.createElement('button');
+            autoBtn.className = 'action-btn';
+            autoBtn.textContent = '🤖 Auto Train (20 epochs)';
+            autoBtn.onclick = startAutoTraining;
+            autoBtn.style.background = 'linear-gradient(45deg, #a8e6cf, #88d8a3)';
+            document.querySelector('.action-buttons').appendChild(autoBtn);
+        }, 1000);
+    </script>
+</body>
+</html>
