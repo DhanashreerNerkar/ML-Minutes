@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Hyperparameters Complete Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+        }
+        
+        .main-title {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn:hover, .tab-btn.active {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            transform: translateY(-2px);
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+        
+        .concept-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border-left: 5px solid #ffd700;
+            transition: all 0.3s ease;
+        }
+        
+        .concept-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .card-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-icon {
+            font-size: 1.3em;
+        }
+        
+        .param-description {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .param-range {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            margin: 12px 0;
+            font-size: 0.9em;
+        }
+        
+        .example-box {
+            background: rgba(78, 205, 196, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            border-left: 3px solid #4ecdc4;
+        }
+        
+        .importance-badge {
+            background: linear-gradient(45deg, #ff6b6b, #ffd700);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-left: auto;
+        }
+        
+        .code-example {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .code-title {
+            color: #4ecdc4;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .code-line {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        
+        .keyword { color: #ff6b6b; }
+        .string { color: #ffd700; }
+        .number { color: #4ecdc4; }
+        .comment { color: #a8e6cf; font-style: italic; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .concepts-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-title {
+                font-size: 2.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="main-title">🎛️ ML Hyperparameters Complete Guide</div>
+            <div class="subtitle">Everything you need to know about tuning machine learning models</div>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="showSection('basics')">📚 Core Parameters</button>
+            <button class="tab-btn" onclick="showSection('regularization')">🛡️ Regularization</button>
+            <button class="tab-btn" onclick="showSection('optimization')">⚡ Optimization</button>
+            <button class="tab-btn" onclick="showSection('augmentation')">🎨 Data Augmentation</button>
+            <button class="tab-btn" onclick="showSection('strategies')">🎯 Tuning Methods</button>
+        </div>
+
+        <!-- Core Parameters Section -->
+        <div id="basics" class="content-section active">
+            <div class="concepts-grid">
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🎯</span>
+                        Learning Rate
+                        <span class="importance-badge">CRITICAL</span>
+                    </div>
+                    <div class="param-description">
+                        The most important hyperparameter! Controls how big steps the optimizer takes. 
+                        Get this wrong and nothing else matters.
+                    </div>
+                    <div class="param-range">
+                        Range: 0.0001 to 0.1<br>
+                        Common: 0.001 (Adam), 0.01 (SGD)<br>
+                        Search: Logarithmic scale
+                    </div>
+                    <div class="example-box">
+                        <strong>Effects:</strong><br>
+                        • Too high (>0.1): Loss explodes 💥<br>
+                        • Too low (<0.0001): Painfully slow 🐌<br>
+                        • Perfect (0.001-0.01): Smooth learning ✅
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">📦</span>
+                        Batch Size
+                        <span class="importance-badge">IMPORTANT</span>
+                    </div>
+                    <div class="param-description">
+                        Number of samples processed before updating weights. Affects memory, speed, and gradient quality.
+                    </div>
+                    <div class="param-range">
+                        Common: 16, 32, 64, 128, 256<br>
+                        Small data: 16-32<br>
+                        Large data: 64-256
+                    </div>
+                    <div class="example-box">
+                        <strong>Trade-offs:</strong><br>
+                        • Large: Stable gradients, more memory 📈<br>
+                        • Small: Noisy gradients, less memory 📉<br>
+                        • Sweet spot: Usually 32-128 🎯
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🧠</span>
+                        Network Architecture
+                        <span class="importance-badge">CRITICAL</span>
+                    </div>
+                    <div class="param-description">
+                        Number of layers and neurons per layer. Determines model capacity to learn patterns.
+                    </div>
+                    <div class="param-range">
+                        Layers: 1-5 for most problems<br>
+                        Neurons: 32, 64, 128, 256, 512<br>
+                        Rule: Start small, grow if needed
+                    </div>
+                    <div class="example-box">
+                        <strong>Guidelines:</strong><br>
+                        • More layers = Complex patterns 🧩<br>
+                        • More neurons = Higher capacity 📊<br>
+                        • Too much = Overfitting 😵
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">⏱️</span>
+                        Epochs
+                        <span class="importance-badge">MODERATE</span>
+                    </div>
+                    <div class="param-description">
+                        Number of complete passes through training data. Balance between underfitting and overfitting.
+                    </div>
+                    <div class="param-range">
+                        Range: 10 to 1000+<br>
+                        Small data: 100-500<br>
+                        Large data: 10-100
+                    </div>
+                    <div class="example-box">
+                        <strong>Best Practice:</strong><br>
+                        Use early stopping instead! Stop when validation loss plateaus 📈
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regularization Section -->
+        <div id="regularization" class="content-section">
+            <div class="concepts-grid">
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🚫</span>
+                        Dropout
+                        <span class="importance-badge">IMPORTANT</span>
+                    </div>
+                    <div class="param-description">
+                        Randomly turns off neurons during training. Prevents overfitting by forcing network 
+                        to not rely on specific neurons.
+                    </div>
+                    <div class="param-range">
+                        Range: 0.1 to 0.5<br>
+                        Common: 0.2, 0.3, 0.5<br>
+                        Higher for larger networks
+                    </div>
+                    <div class="example-box">
+                        <strong>How it works:</strong><br>
+                        • Training: Random neurons → 0 🎲<br>
+                        • Inference: All neurons active ✅<br>
+                        • Effect: Better generalization 🎯
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">TensorFlow Implementation</div>
+                        <div class="code-line">model.add(tf.keras.layers.Dropout(<span class="number">0.3</span>))</div>
+                        <div class="code-line"><span class="comment"># 30% of neurons randomly set to 0</span></div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">⚖️</span>
+                        Weight Decay
+                        <span class="importance-badge">IMPORTANT</span>
+                    </div>
+                    <div class="param-description">
+                        Adds penalty for large weights. Keeps weights small to prevent overfitting. 
+                        Also called L2 regularization.
+                    </div>
+                    <div class="param-range">
+                        Range: 1e-5 to 1e-2<br>
+                        Common: 1e-4, 1e-3<br>
+                        Search: Logarithmic scale
+                    </div>
+                    <div class="example-box">
+                        <strong>Formula:</strong><br>
+                        Total Loss = Original Loss + λ × ||W||²<br>
+                        λ = weight decay coefficient
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Implementation</div>
+                        <div class="code-line">optimizer = Adam(learning_rate=<span class="number">0.001</span>, weight_decay=<span class="number">1e-4</span>)</div>
+                        <div class="code-line"><span class="comment"># or in layer:</span></div>
+                        <div class="code-line">Dense(<span class="number">64</span>, kernel_regularizer=l2(<span class="number">1e-4</span>))</div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">📏</span>
+                        L1 Regularization
+                        <span class="importance-badge">MODERATE</span>
+                    </div>
+                    <div class="param-description">
+                        Penalty proportional to absolute weight values. Creates sparse models - 
+                        many weights become exactly zero.
+                    </div>
+                    <div class="param-range">
+                        Range: 1e-5 to 1e-2<br>
+                        Common: 1e-4, 1e-3<br>
+                        Formula: Loss + λ × ||W||₁
+                    </div>
+                    <div class="example-box">
+                        <strong>Use L1 when:</strong><br>
+                        • Want feature selection 🎯<br>
+                        • Need sparse models 📊<br>
+                        • Have many irrelevant features 🗑️
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">TensorFlow L1 Regularization</div>
+                        <div class="code-line">Dense(<span class="number">64</span>, kernel_regularizer=l1(<span class="number">1e-4</span>))</div>
+                        <div class="code-line"><span class="comment"># Creates sparse weight matrix</span></div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">📐</span>
+                        L2 Regularization
+                        <span class="importance-badge">IMPORTANT</span>
+                    </div>
+                    <div class="param-description">
+                        Penalty proportional to squared weights. Keeps weights small but doesn't force them to zero.
+                    </div>
+                    <div class="param-range">
+                        Range: 1e-5 to 1e-2<br>
+                        Common: 1e-4, 1e-3<br>
+                        Formula: Loss + λ × ||W||₂²
+                    </div>
+                    <div class="example-box">
+                        <strong>Use L2 when:</strong><br>
+                        • Want smooth weight distribution 📊<br>
+                        • All features potentially useful ✅<br>
+                        • Working with continuous data 📈
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">TensorFlow L2 Regularization</div>
+                        <div class="code-line">Dense(<span class="number">64</span>, kernel_regularizer=l2(<span class="number">1e-4</span>))</div>
+                        <div class="code-line"><span class="comment"># Keeps weights small and controlled</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optimization Section -->
+        <div id="optimization" class="content-section">
+            <div class="concepts-grid">
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🚀</span>
+                        Momentum
+                        <span class="importance-badge">IMPORTANT</span>
+                    </div>
+                    <div class="param-description">
+                        Accelerates optimization by accumulating velocity. Like a ball rolling downhill - 
+                        builds momentum and doesn't stop at small bumps.
+                    </div>
+                    <div class="param-range">
+                        Range: 0.5 to 0.99<br>
+                        Common: 0.9, 0.95<br>
+                        Formula: v = βv + ∇w, w = w - αv
+                    </div>
+                    <div class="example-box">
+                        <strong>Benefits:</strong><br>
+                        • Faster convergence 🚀<br>
+                        • Escapes local minima 🏃‍♂️<br>
+                        • Smooths noisy gradients 📊
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">SGD with Momentum</div>
+                        <div class="code-line">optimizer = SGD(lr=<span class="number">0.01</span>, momentum=<span class="number">0.9</span>)</div>
+                        <div class="code-line"><span class="comment"># 90% of previous velocity retained</span></div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🤖</span>
+                        Adam Beta1 (β₁)
+                        <span class="importance-badge">MODERATE</span>
+                    </div>
+                    <div class="param-description">
+                        Controls momentum in Adam optimizer. Exponential decay rate for first moment estimates.
+                    </div>
+                    <div class="param-range">
+                        Range: 0.8 to 0.999<br>
+                        Default: 0.9<br>
+                        Formula: m = β₁m + (1-β₁)∇w
+                    </div>
+                    <div class="example-box">
+                        <strong>Effect:</strong><br>
+                        • Higher (0.95+): More momentum 🚀<br>
+                        • Lower (0.8): More responsive ⚡<br>
+                        • Default 0.9 usually perfect ✅
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Adam with Custom Beta1</div>
+                        <div class="code-line">optimizer = Adam(lr=<span class="number">0.001</span>, beta_1=<span class="number">0.95</span>)</div>
+                        <div class="code-line"><span class="comment"># Higher momentum for smoother updates</span></div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">📊</span>
+                        Adam Beta2 (β₂)
+                        <span class="importance-badge">MODERATE</span>
+                    </div>
+                    <div class="param-description">
+                        Controls squared gradient accumulation in Adam. Affects adaptive learning rate scaling.
+                    </div>
+                    <div class="param-range">
+                        Range: 0.99 to 0.9999<br>
+                        Default: 0.999<br>
+                        Formula: v = β₂v + (1-β₂)(∇w)²
+                    </div>
+                    <div class="example-box">
+                        <strong>Effect:</strong><br>
+                        • Higher (0.999+): Longer memory 🧠<br>
+                        • Lower (0.99): More responsive 📈<br>
+                        • Rarely needs tuning ⚙️
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Adam with Custom Beta2</div>
+                        <div class="code-line">optimizer = Adam(beta_1=<span class="number">0.9</span>, beta_2=<span class="number">0.99</span>)</div>
+                        <div class="code-line"><span class="comment"># More responsive to recent gradients</span></div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🔢</span>
+                        Adam Epsilon (ε)
+                        <span class="importance-badge">LOW</span>
+                    </div>
+                    <div class="param-description">
+                        Small constant to prevent division by zero. Provides numerical stability.
+                    </div>
+                    <div class="param-range">
+                        Range: 1e-8 to 1e-4<br>
+                        Default: 1e-8 (TF), 1e-7 (PyTorch)<br>
+                        Formula: w = w - α × m̂/(√v̂ + ε)
+                    </div>
+                    <div class="example-box">
+                        <strong>When to tune:</strong><br>
+                        • Usually leave as default 🎯<br>
+                        • Increase if gradients very small 🔍<br>
+                        • Rarely causes issues ✅
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Custom Epsilon</div>
+                        <div class="code-line">optimizer = Adam(epsilon=<span class="number">1e-7</span>)</div>
+                        <div class="code-line"><span class="comment"># Slightly larger for numerical stability</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Augmentation Section -->
+        <div id="augmentation" class="content-section">
+            <div class="concepts-grid">
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🔄</span>
+                        Rotation Angle
+                        <span class="importance-badge">IMPORTANT</span>
+                    </div>
+                    <div class="param-description">
+                        Randomly rotates images during training. Increases dataset diversity and rotation invariance.
+                    </div>
+                    <div class="param-range">
+                        Range: 0° to 45°<br>
+                        Common: 10°, 15°, 30°<br>
+                        Domain specific tuning needed
+                    </div>
+                    <div class="example-box">
+                        <strong>Guidelines by domain:</strong><br>
+                        • Natural images: 10-30° 🌅<br>
+                        • Faces: ±15° max 👤<br>
+                        • Medical: 5-10° (be careful!) 🏥<br>
+                        • Text/digits: 5-15° max 📝
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">TensorFlow Data Augmentation</div>
+                        <div class="code-line">tf.keras.layers.RandomRotation(<span class="number">0.2</span>)  <span class="comment"># ±20 degrees</span></div>
+                        <div class="code-line">tf.keras.layers.RandomFlip(<span class="string">"horizontal"</span>)</div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🔃</span>
+                        Flip Probability
+                        <span class="importance-badge">MODERATE</span>
+                    </div>
+                    <div class="param-description">
+                        Probability of flipping images horizontally or vertically. Doubles effective dataset size.
+                    </div>
+                    <div class="param-range">
+                        Horizontal: 0.0 to 1.0<br>
+                        Common: 0.5 (50% chance)<br>
+                        Vertical: Usually 0.0
+                    </div>
+                    <div class="example-box">
+                        <strong>When to use:</strong><br>
+                        • ✅ Horizontal: Animals, objects, landscapes<br>
+                        • ❌ Don't flip: Text, faces, directional signs<br>
+                        • ❌ Vertical: Rarely useful (gravity matters!)
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Flip Augmentation</div>
+                        <div class="code-line">tf.keras.layers.RandomFlip(</div>
+                        <div class="code-line">    mode=<span class="string">"horizontal"</span>,  <span class="comment"># Only horizontal</span></div>
+                        <div class="code-line">    probability=<span class="number">0.5</span>  <span class="comment"># 50% chance</span></div>
+                        <div class="code-line">)</div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">📊</span>
+                        Noise Standard Deviation
+                        <span class="importance-badge">MODERATE</span>
+                    </div>
+                    <div class="param-description">
+                        Adds Gaussian noise to inputs. Acts as regularization and improves robustness.
+                    </div>
+                    <div class="param-range">
+                        Range: 0.01 to 0.2<br>
+                        Common: 0.05, 0.1<br>
+                        Formula: x_noisy = x + N(0, σ²)
+                    </div>
+                    <div class="example-box">
+                        <strong>Noise levels:</strong><br>
+                        • Low (0.01-0.05): Gentle regularization 🌊<br>
+                        • Medium (0.05-0.1): Strong regularization ⚡<br>
+                        • High (0.1+): May hurt performance ⚠️
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Gaussian Noise Layer</div>
+                        <div class="code-line">tf.keras.layers.GaussianNoise(stddev=<span class="number">0.05</span>)</div>
+                        <div class="code-line"><span class="comment"># Adds noise with std=0.05</span></div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🎨</span>
+                        Color Jittering
+                        <span class="importance-badge">MODERATE</span>
+                    </div>
+                    <div class="param-description">
+                        Randomly changes brightness, contrast, saturation, hue. Makes models robust to lighting variations.
+                    </div>
+                    <div class="param-range">
+                        Brightness: ±20% (0.8-1.2)<br>
+                        Contrast: ±20% (0.8-1.2)<br>
+                        Saturation: ±30% (0.7-1.3)<br>
+                        Hue: ±10% (±0.1)
+                    </div>
+                    <div class="example-box">
+                        <strong>Best practices:</strong><br>
+                        • Start conservative: ±10-20% 🎯<br>
+                        • Natural images: More aggressive 🌄<br>
+                        • Medical: Very conservative! 🏥
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Color Augmentation</div>
+                        <div class="code-line">tf.keras.layers.RandomBrightness(<span class="number">0.2</span>)  <span class="comment"># ±20%</span></div>
+                        <div class="code-line">tf.keras.layers.RandomContrast(<span class="number">0.2</span>)   <span class="comment"># ±20%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tuning Strategies Section -->
+        <div id="strategies" class="content-section">
+            <div class="concepts-grid">
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🎯</span>
+                        Grid Search
+                        <span class="importance-badge">SYSTEMATIC</span>
+                    </div>
+                    <div class="param-description">
+                        Tests all combinations of specified parameter values. Thorough but expensive.
+                    </div>
+                    <div class="example-box">
+                        <strong>✅ Pros:</strong> Guaranteed to find best in search space<br>
+                        <strong>❌ Cons:</strong> Exponentially expensive, wasteful
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Scikit-learn Grid Search</div>
+                        <div class="code-line"><span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> GridSearchCV</div>
+                        <div class="code-line"></div>
+                        <div class="code-line">param_grid = {</div>
+                        <div class="code-line">    <span class="string">'learning_rate'</span>: [<span class="number">0.001</span>, <span class="number">0.01</span>, <span class="number">0.1</span>],</div>
+                        <div class="code-line">    <span class="string">'batch_size'</span>: [<span class="number">32</span>, <span class="number">64</span>, <span class="number">128</span>],</div>
+                        <div class="code-line">    <span class="string">'dropout'</span>: [<span class="number">0.2</span>, <span class="number">0.3</span>, <span class="number">0.5</span>]</div>
+                        <div class="code-line">}</div>
+                        <div class="code-line"></div>
+                        <div class="code-line">grid_search = GridSearchCV(model, param_grid, cv=<span class="number">5</span>)</div>
+                        <div class="code-line">grid_search.fit(X_train, y_train)</div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🎲</span>
+                        Random Search
+                        <span class="importance-badge">EFFICIENT</span>
+                    </div>
+                    <div class="param-description">
+                        Randomly samples parameter combinations. Often better than grid search with same budget.
+                    </div>
+                    <div class="example-box">
+                        <strong>✅ Pros:</strong> More efficient, works in high dimensions<br>
+                        <strong>❌ Cons:</strong> No guarantee of finding optimal
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Random Search Example</div>
+                        <div class="code-line"><span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> RandomizedSearchCV</div>
+                        <div class="code-line"><span class="keyword">from</span> scipy.stats <span class="keyword">import</span> uniform, randint</div>
+                        <div class="code-line"></div>
+                        <div class="code-line">param_dist = {</div>
+                        <div class="code-line">    <span class="string">'learning_rate'</span>: uniform(<span class="number">0.0001</span>, <span class="number">0.1</span>),</div>
+                        <div class="code-line">    <span class="string">'batch_size'</span>: [<span class="number">16</span>, <span class="number">32</span>, <span class="number">64</span>, <span class="number">128</span>],</div>
+                        <div class="code-line">    <span class="string">'dropout'</span>: uniform(<span class="number">0.1</span>, <span class="number">0.4</span>)</div>
+                        <div class="code-line">}</div>
+                        <div class="code-line"></div>
+                        <div class="code-line">random_search = RandomizedSearchCV(</div>
+                        <div class="code-line">    model, param_dist, n_iter=<span class="number">50</span>, cv=<span class="number">5</span></div>
+                        <div class="code-line">)</div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">🧠</span>
+                        Bayesian Optimization
+                        <span class="importance-badge">SMART</span>
+                    </div>
+                    <div class="param-description">
+                        Uses probabilistic model to guide search toward promising regions. Most sample-efficient.
+                    </div>
+                    <div class="example-box">
+                        <strong>✅ Pros:</strong> Very sample efficient, learns from past<br>
+                        <strong>❌ Cons:</strong> Complex setup, doesn't parallelize well
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Optuna Bayesian Optimization</div>
+                        <div class="code-line"><span class="keyword">import</span> optuna</div>
+                        <div class="code-line"></div>
+                        <div class="code-line"><span class="keyword">def</span> objective(trial):</div>
+                        <div class="code-line">    lr = trial.suggest_float(<span class="string">'lr'</span>, <span class="number">1e-4</span>, <span class="number">1e-1</span>, log=<span class="keyword">True</span>)</div>
+                        <div class="code-line">    dropout = trial.suggest_float(<span class="string">'dropout'</span>, <span class="number">0.1</span>, <span class="number">0.5</span>)</div>
+                        <div class="code-line">    neurons = trial.suggest_categorical(<span class="string">'neurons'</span>, [<span class="number">32</span>, <span class="number">64</span>, <span class="number">128</span>])</div>
+                        <div class="code-line">    </div>
+                        <div class="code-line">    <span class="comment"># Train model and return validation score</span></div>
+                        <div class="code-line">    model = create_model(lr, dropout, neurons)</div>
+                        <div class="code-line">    score = train_and_evaluate(model)</div>
+                        <div class="code-line">    <span class="keyword">return</span> score</div>
+                        <div class="code-line"></div>
+                        <div class="code-line">study = optuna.create_study(direction=<span class="string">'maximize'</span>)</div>
+                        <div class="code-line">study.optimize(objective, n_trials=<span class="number">100</span>)</div>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="card-title">
+                        <span class="card-icon">⏰</span>
+                        Early Stopping & Pruning
+                        <span class="importance-badge">EFFICIENT</span>
+                    </div>
+                    <div class="param-description">
+                        Stops unpromising trials early. Saves huge amounts of computational time.
+                    </div>
+                    <div class="example-box">
+                        <strong>✅ Pros:</strong> Massive time savings, explore more configs<br>
+                        <strong>❌ Cons:</strong> Risk stopping good slow-starters
+                    </div>
+                    <div class="code-example">
+                        <div class="code-title">Early Stopping Implementation</div>
+                        <div class="code-line">early_stopping = EarlyStopping(</div>
+                        <div class="code-line">    patience=<span class="number">10</span>,  <span class="comment"># Wait 10 epochs</span></div>
+                        <div class="code-line">    min_delta=<span class="number">0.001</span>,  <span class="comment"># Minimum improvement</span></div>
+                        <div class="code-line">    restore_best_weights=<span class="keyword">True</span>  <span class="comment"># Use best model</span></div>
+                        <div class="code-line">)</div>
+                        <div class="code-line"></div>
+                        <div class="code-line">model.fit(X, y, callbacks=[early_stopping])</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin: 30px 0;">
+                <h2 style="color: #ffd700; margin-bottom: 20px; text-align: center;">🎯 Practical Tuning Strategy</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div style="background: rgba(255,107,107,0.2); padding: 20px; border-radius: 15px;">
+                        <strong>🔥 Phase 1: Quick Start (1-2 hours)</strong><br>
+                        • Random search, 10-20 trials<br>
+                        • Focus: Learning rate + architecture<br>
+                        • Goal: Beat baseline
+                    </div>
+                    <div style="background: rgba(255,215,0,0.2); padding: 20px; border-radius: 15px;">
+                        <strong>⚡ Phase 2: Focused (4-8 hours)</strong><br>
+                        • Grid search around best from Phase 1<br>
+                        • Add: Regularization, batch size<br>
+                        • Goal: Competitive performance
+                    </div>
+                    <div style="background: rgba(78,205,196,0.2); padding: 20px; border-radius: 15px;">
+                        <strong>🔬 Phase 3: Fine-tune (8+ hours)</strong><br>
+                        • Bayesian optimization<br>
+                        • Add: Data augmentation, schedules<br>
+                        • Goal: Squeeze final 1-2%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Remove active class from all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Activate current tab
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        // Simple initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded successfully');
+        });
+    </script>
+</body>
+</html>
