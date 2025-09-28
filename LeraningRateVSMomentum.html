@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Rate vs Momentum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+        }
+        
+        .main-title {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 4s ease infinite;
+        }
+        
+        .subtitle {
+            font-size: 1.4em;
+            opacity: 0.9;
+        }
+        
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .concept-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+            border: 3px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .concept-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+        
+        .learning-rate-box {
+            border-color: #4ecdc4;
+        }
+        
+        .momentum-box {
+            border-color: #ffd700;
+        }
+        
+        .concept-title {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .lr-title {
+            color: #4ecdc4;
+        }
+        
+        .momentum-title {
+            color: #ffd700;
+        }
+        
+        .analogy-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .analogy-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .analogy-visual {
+            text-align: center;
+            font-size: 2.5em;
+            margin: 20px 0;
+        }
+        
+        .car-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .car-scenario {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+        
+        .car-scenario:hover {
+            transform: scale(1.05);
+        }
+        
+        .car-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .car-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .interactive-demo {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .demo-title {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 25px;
+            color: #ffd700;
+        }
+        
+        .controls-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .control-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .lr-control {
+            border-left: 5px solid #4ecdc4;
+        }
+        
+        .lr-control .control-title {
+            color: #4ecdc4;
+        }
+        
+        .momentum-control {
+            border-left: 5px solid #ffd700;
+        }
+        
+        .momentum-control .control-title {
+            color: #ffd700;
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+        }
+        
+        .slider-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 10px 0;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+        }
+        
+        .lr-slider::-webkit-slider-thumb {
+            background: #4ecdc4;
+        }
+        
+        .momentum-slider::-webkit-slider-thumb {
+            background: #ffd700;
+        }
+        
+        .value-display {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        
+        .visualization-area {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            color: #333;
+            text-align: center;
+        }
+        
+        .path-canvas {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .explanation-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid;
+        }
+        
+        .lr-explanation {
+            border-left-color: #4ecdc4;
+        }
+        
+        .momentum-explanation {
+            border-left-color: #ffd700;
+        }
+        
+        .combined-explanation {
+            border-left-color: #ff6b6b;
+        }
+        
+        .explanation-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .formula-box {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .example-scenario {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .scenario-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+        
+        .step-by-step {
+            margin: 20px 0;
+        }
+        
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .step-number {
+            background: #ffd700;
+            color: #333;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes moveRight {
+            from { transform: translateX(0); }
+            to { transform: translateX(50px); }
+        }
+        
+        .moving-car {
+            animation: moveRight 2s ease-in-out infinite alternate;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-title {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="main-title">Learning Rate vs Momentum</div>
+            <div class="subtitle">Understanding the difference with simple analogies and examples</div>
+        </div>
+
+        <!-- Car Driving Analogy -->
+        <div class="comparison-container">
+            <div class="concept-box learning-rate-box">
+                <div class="concept-title lr-title">
+                    <span>🎯</span>
+                    Learning Rate
+                </div>
+                <div class="analogy-section">
+                    <div class="analogy-title">🚗 Car Analogy: Gas Pedal Pressure</div>
+                    <div class="analogy-visual">🚗💨</div>
+                    <div style="text-align: center; font-size: 1.1em; line-height: 1.7;">
+                        <strong>Learning Rate = How hard you press the gas pedal</strong><br><br>
+                        • Press harder → Car goes faster (bigger steps)<br>
+                        • Press lighter → Car goes slower (smaller steps)<br>
+                        • <strong>CONSTANT</strong> pressure throughout the journey
+                    </div>
+                </div>
+                <div class="formula-box">
+                    New Position = Old Position - Learning Rate × Gradient<br><br>
+                    w = w - α × ∇w
+                </div>
+            </div>
+
+            <div class="concept-box momentum-box">
+                <div class="concept-title momentum-title">
+                    <span>🚀</span>
+                    Momentum
+                </div>
+                <div class="analogy-section">
+                    <div class="analogy-title">🚗 Car Analogy: Building Up Speed</div>
+                    <div class="analogy-visual">🚗💨💨💨</div>
+                    <div style="text-align: center; font-size: 1.1em; line-height: 1.7;">
+                        <strong>Momentum = Car's accumulated velocity</strong><br><br>
+                        • Starts from rest → Gradually speeds up<br>
+                        • Builds momentum in consistent directions<br>
+                        • <strong>VARIES</strong> based on previous movement
+                    </div>
+                </div>
+                <div class="formula-box">
+                    Velocity = Momentum × Previous Velocity + Gradient<br><br>
+                    v = βv + ∇w<br>
+                    w = w - α × v
+                </div>
+            </div>
+        </div>
+
+        <!-- Real Example Scenario -->
+        <div class="example-scenario">
+            <div class="scenario-title">🎯 Dummy Example: Finding the Bottom of a Hill</div>
+            
+            <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 25px; margin: 20px 0;">
+                <div style="text-align: center; font-size: 1.3em; margin-bottom: 20px;">
+                    <strong>🏔️ Scenario:</strong> You're blindfolded on a hill and want to reach the bottom
+                </div>
+                
+                <div class="car-demo">
+                    <div class="car-scenario">
+                        <div class="car-icon">🚶‍♂️</div>
+                        <div class="car-label">Only Learning Rate</div>
+                        <div>Takes fixed-size steps</div>
+                    </div>
+                    <div style="font-size: 2em;">VS</div>
+                    <div class="car-scenario">
+                        <div class="car-icon moving-car">🏃‍♂️</div>
+                        <div class="car-label">Learning Rate + Momentum</div>
+                        <div>Builds up speed over time</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-by-step">
+                <h3 style="color: #4ecdc4; margin-bottom: 15px; text-align: center;">📊 Step-by-Step Comparison</h3>
+                
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Starting Position:</strong> Both start at the same point on the hill
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Learning Rate Only:</strong> Takes step of size α = 0.1 in steepest direction<br>
+                    <code style="color: #4ecdc4;">position = position - 0.1 × gradient</code>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>With Momentum:</strong> Starts with velocity = 0, then builds up<br>
+                    <code style="color: #ffd700;">velocity = 0.9 × velocity + gradient<br>
+                    position = position - 0.1 × velocity</code>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>After 5 steps:</strong><br>
+                    • Learning Rate: Still taking same size steps 🚶‍♂️<br>
+                    • Momentum: Built up speed, taking bigger effective steps 🏃‍♂️💨
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <strong>Result:</strong><br>
+                    • Learning Rate: Steady but slow progress 🐌<br>
+                    • Momentum: Faster convergence, can escape local minima 🚀
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Demo -->
+        <div class="interactive-demo">
+            <div class="demo-title">🎮 Interactive Comparison</div>
+            
+            <div class="controls-section">
+                <div class="control-panel lr-control">
+                    <div class="control-title">🎯 Learning Rate Control</div>
+                    <div class="slider-container">
+                        <label class="slider-label">Learning Rate: <span id="lrValue">0.1</span></label>
+                        <input type="range" id="lrSlider" class="slider lr-slider" 
+                               min="0.01" max="0.5" step="0.01" value="0.1">
+                    </div>
+                    <div class="value-display">
+                        Step Size: <span id="stepSize">0.1</span><br>
+                        (Always constant)
+                    </div>
+                </div>
+                
+                <div class="control-panel momentum-control">
+                    <div class="control-title">🚀 Momentum Control</div>
+                    <div class="slider-container">
+                        <label class="slider-label">Momentum: <span id="momentumValue">0.9</span></label>
+                        <input type="range" id="momentumSlider" class="slider momentum-slider" 
+                               min="0" max="0.99" step="0.01" value="0.9">
+                    </div>
+                    <div class="value-display">
+                        Current Velocity: <span id="velocity">0.0</span><br>
+                        (Builds up over time)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization-area">
+                <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: #333;">
+                    📈 Optimization Paths Comparison
+                </div>
+                <canvas id="pathCanvas" class="path-canvas"></canvas>
+                <div style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                    🔵 Blue path: Learning Rate only | 🟡 Yellow path: Learning Rate + Momentum
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn" onclick="simulateOptimization()">
+                    🎬 Run Simulation
+                </button>
+                <button class="action-btn" onclick="resetSimulation()">
+                    🔄 Reset
+                </button>
+                <button class="action-btn" onclick="compareScenarios()">
+                    ⚖️ Compare Scenarios
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Differences -->
+        <div class="explanation-grid">
+            <div class="explanation-card lr-explanation">
+                <div class="explanation-title">🎯 Learning Rate Characteristics</div>
+                <div>
+                    <strong>Nature:</strong> Fixed step size<br>
+                    <strong>Behavior:</strong> Same size step every time<br>
+                    <strong>Formula:</strong> w = w - α × ∇w<br>
+                    <strong>Analogy:</strong> Robot taking identical steps<br><br>
+                    
+                    <strong>Problems:</strong><br>
+                    • Can get stuck in valleys (oscillation)<br>
+                    • Slow in flat regions<br>
+                    • No memory of previous directions
+                </div>
+            </div>
+            
+            <div class="explanation-card momentum-explanation">
+                <div class="explanation-title">🚀 Momentum Characteristics</div>
+                <div>
+                    <strong>Nature:</strong> Accumulates velocity<br>
+                    <strong>Behavior:</strong> Speeds up in consistent directions<br>
+                    <strong>Formula:</strong> v = βv + ∇w, w = w - α × v<br>
+                    <strong>Analogy:</strong> Ball rolling downhill<br><br>
+                    
+                    <strong>Benefits:</strong><br>
+                    • Escapes local minima<br>
+                    • Faster convergence<br>
+                    • Dampens oscillations
+                </div>
+            </div>
+            
+            <div class="explanation-card combined-explanation">
+                <div class="explanation-title">⚡ Combined Power</div>
+                <div>
+                    <strong>Together they create:</strong><br>
+                    • Learning Rate: Controls maximum step size<br>
+                    • Momentum: Controls acceleration<br><br>
+                    
+                    <strong>Real-world analogy:</strong><br>
+                    🚗 Car driving to destination:<br>
+                    • Learning Rate = Gas pedal pressure<br>
+                    • Momentum = Car's kinetic energy<br><br>
+                    
+                    <strong>Result:</strong> Faster, smoother optimization!
+                </div>
+            </div>
+        </div>
+
+        <!-- Numerical Example -->
+        <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin: 30px 0;">
+            <h2 style="color: #ffd700; text-align: center; margin-bottom: 25px;">🔢 Numerical Example</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div style="background: rgba(78,205,196,0.2); padding: 20px; border-radius: 15px;">
+                    <h3 style="color: #4ecdc4; margin-bottom: 15px;">🎯 Learning Rate Only (α = 0.1)</h3>
+                    <div style="font-family: 'Courier New', monospace; font-size: 0.95em;">
+                        <strong>Step 1:</strong> w = 10 - 0.1 × 5 = 9.5<br>
+                        <strong>Step 2:</strong> w = 9.5 - 0.1 × 4 = 9.1<br>
+                        <strong>Step 3:</strong> w = 9.1 - 0.1 × 3 = 8.8<br>
+                        <strong>Step 4:</strong> w = 8.8 - 0.1 × 2 = 8.6<br>
+                        <strong>Step 5:</strong> w = 8.6 - 0.1 × 1 = 8.5<br><br>
+                        <em>Fixed step size every time!</em>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,215,0,0.2); padding: 20px; border-radius: 15px;">
+                    <h3 style="color: #ffd700; margin-bottom: 15px;">🚀 Learning Rate + Momentum (α = 0.1, β = 0.9)</h3>
+                    <div style="font-family: 'Courier New', monospace; font-size: 0.95em;">
+                        <strong>Step 1:</strong> v = 0×0.9 + 5 = 5, w = 10 - 0.1×5 = 9.5<br>
+                        <strong>Step 2:</strong> v = 5×0.9 + 4 = 8.5, w = 9.5 - 0.1×8.5 = 8.65<br>
+                        <strong>Step 3:</strong> v = 8.5×0.9 + 3 = 10.65, w = 8.65 - 0.1×10.65 = 7.58<br>
+                        <strong>Step 4:</strong> v = 10.65×0.9 + 2 = 11.6, w = 7.58 - 0.1×11.6 = 6.42<br>
+                        <strong>Step 5:</strong> v = 11.6×0.9 + 1 = 11.4, w = 6.42 - 0.1×11.4 = 5.28<br><br>
+                        <em>Effective step size grows over time!</em>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 25px; font-size: 1.2em;">
+                <strong>📊 Result:</strong> Momentum reached 5.28 while Learning Rate only reached 8.5!<br>
+                <em>Momentum converged much faster by building up speed</em> 🚀
+            </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div style="background: rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; margin: 30px 0;">
+            <h2 style="color: #ffd700; text-align: center; margin-bottom: 25px;">💡 Key Insights</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                <div style="background: rgba(78,205,196,0.2); padding: 20px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
+                    <strong>Learning Rate</strong><br>
+                    <em>"The speed limit"</em><br><br>
+                    Sets maximum step size<br>
+                    Constant throughout training<br>
+                    Like cruise control
+                </div>
+                
+                <div style="background: rgba(255,215,0,0.2); padding: 20px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🚀</div>
+                    <strong>Momentum</strong><br>
+                    <em>"The acceleration"</em><br><br>
+                    Builds up velocity over time<br>
+                    Changes based on history<br>
+                    Like a ball rolling downhill
+                </div>
+                
+                <div style="background: rgba(255,107,107,0.2); padding: 20px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2em; margin-bottom: 10px;">⚡</div>
+                    <strong>Together</strong><br>
+                    <em>"Smart navigation"</em><br><br>
+                    Learning Rate controls max speed<br>
+                    Momentum provides acceleration<br>
+                    Much faster convergence!
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical Example -->
+        <div style="background: rgba(0,0,0,0.4); border-radius: 20px; padding: 30px; margin: 30px 0;">
+            <h2 style="color: #ffd700; text-align: center; margin-bottom: 25px;">🛠️ Practical Training Example</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <h3 style="color: #4ecdc4; margin-bottom: 15px;">📈 Learning Rate = 0.01 (No Momentum)</h3>
+                    <div style="font-family: 'Courier New', monospace; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                        Epoch 1: Loss = 2.5 → 2.3 (improved by 0.2)<br>
+                        Epoch 2: Loss = 2.3 → 2.1 (improved by 0.2)<br>
+                        Epoch 3: Loss = 2.1 → 1.9 (improved by 0.2)<br>
+                        Epoch 4: Loss = 1.9 → 1.7 (improved by 0.2)<br>
+                        Epoch 5: Loss = 1.7 → 1.5 (improved by 0.2)<br><br>
+                        <em>Steady, predictable progress</em>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: #ffd700; margin-bottom: 15px;">🚀 Learning Rate = 0.01 + Momentum = 0.9</h3>
+                    <div style="font-family: 'Courier New', monospace; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                        Epoch 1: Loss = 2.5 → 2.2 (improved by 0.3)<br>
+                        Epoch 2: Loss = 2.2 → 1.8 (improved by 0.4)<br>
+                        Epoch 3: Loss = 1.8 → 1.3 (improved by 0.5)<br>
+                        Epoch 4: Loss = 1.3 → 0.7 (improved by 0.6)<br>
+                        Epoch 5: Loss = 0.7 → 0.2 (improved by 0.5)<br><br>
+                        <em>Accelerating progress!</em>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 25px; font-size: 1.3em;">
+                <strong>🏆 Winner:</strong> Momentum reached loss of 0.2 while plain Learning Rate only reached 1.5!<br>
+                <em>Momentum was ~7x more effective! 🚀</em>
+            </div>
+        </div>
+
+        <!-- Bottom Line -->
+        <div style="background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 20px; padding: 30px; margin: 30px 0; text-align: center;">
+            <h2 style="margin-bottom: 20px;">🎓 The Bottom Line</h2>
+            <div style="font-size: 1.2em; line-height: 1.7;">
+                <p style="margin-bottom: 15px;">
+                    <strong>Learning Rate</strong> is like setting the speed limit - it determines the maximum step size.
+                </p>
+                <p style="margin-bottom: 15px;">
+                    <strong>Momentum</strong> is like having a memory of where you've been going - it builds up velocity in consistent directions.
+                </p>
+                <p>
+                    <strong>Together:</strong> Learning Rate provides the "speed limit" while Momentum provides the "acceleration" - 
+                    creating much smarter and faster optimization! 🎯🚀
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let learningRate = 0.1;
+        let momentum = 0.9;
+        let velocity = 0.0;
+        let position = { lr: { x: 100, y: 300 }, momentum: { x: 100, y: 300 } };
+        let paths = { lr: [], momentum: [] };
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        function updateControls() {
+            // Learning Rate
+            const lrSlider = document.getElementById('lrSlider');
+            const lrValue = document.getElementById('lrValue');
+            const stepSize = document.getElementById('stepSize');
+            
+            if (lrSlider && lrValue && stepSize) {
+                learningRate = parseFloat(lrSlider.value);
+                lrValue.textContent = learningRate.toFixed(3);
+                stepSize.textContent = learningRate.toFixed(3);
+            }
+            
+            // Momentum
+            const momentumSlider = document.getElementById('momentumSlider');
+            const momentumValue = document.getElementById('momentumValue');
+            const velocityDisplay = document.getElementById('velocity');
+            
+            if (momentumSlider && momentumValue && velocityDisplay) {
+                momentum = parseFloat(momentumSlider.value);
+                momentumValue.textContent = momentum.toFixed(2);
+                velocityDisplay.textContent = velocity.toFixed(3);
+            }
+        }
+
+        function simulateOptimization() {
+            resetSimulation();
+            
+            const canvas = document.getElementById('pathCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Simulate optimization steps
+            let lrPos = { x: 100, y: 300 };
+            let momPos = { x: 100, y: 300 };
+            let vel = 0;
+            
+            paths.lr = [{ ...lrPos }];
+            paths.momentum = [{ ...momPos }];
+            
+            // Simple quadratic function simulation
+            for (let step = 0; step < 50; step++) {
+                // Learning rate only
+                const lrGradient = (lrPos.x - 300) * 0.01; // Gradient pointing toward x=300
+                lrPos.x -= learningRate * lrGradient * 100;
+                paths.lr.push({ ...lrPos });
+                
+                // Learning rate + momentum
+                const momGradient = (momPos.x - 300) * 0.01;
+                vel = momentum * vel + momGradient;
+                momPos.x -= learningRate * vel * 100;
+                paths.momentum.push({ ...momPos });
+                
+                // Stop if converged
+                if (Math.abs(lrPos.x - 300) < 1 && Math.abs(momPos.x - 300) < 1) break;
+            }
+            
+            drawPaths();
+        }
+
+        function drawPaths() {
+            const canvas = document.getElementById('pathCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            // Clear canvas
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw loss landscape (simple parabola)
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let level = 1; level <= 10; level++) {
+                ctx.beginPath();
+                const radius = level * 20;
+                ctx.arc(300, height/2, radius, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+            
+            // Mark target (minimum)
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(300, height/2, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw Learning Rate path
+            if (paths.lr.length > 1) {
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(paths.lr[0].x, paths.lr[0].y);
+                for (let i = 1; i < paths.lr.length; i++) {
+                    ctx.lineTo(paths.lr[i].x, paths.lr[i].y);
+                }
+                ctx.stroke();
+                
+                // End point
+                const lastLR = paths.lr[paths.lr.length - 1];
+                ctx.fillStyle = '#4ecdc4';
+                ctx.beginPath();
+                ctx.arc(lastLR.x, lastLR.y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            
+            // Draw Momentum path
+            if (paths.momentum.length > 1) {
+                ctx.strokeStyle = '#ffd700';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(paths.momentum[0].x, paths.momentum[0].y);
+                for (let i = 1; i < paths.momentum.length; i++) {
+                    ctx.lineTo(paths.momentum[i].x, paths.momentum[i].y);
+                }
+                ctx.stroke();
+                
+                // End point
+                const lastMom = paths.momentum[paths.momentum.length - 1];
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(lastMom.x, lastMom.y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Target (Global Minimum)', 300, height/2 - 20);
+            ctx.fillText('🔵 Learning Rate Only', 100, 30);
+            ctx.fillText('🟡 Learning Rate + Momentum', 100, 50);
+        }
+
+        function resetSimulation() {
+            velocity = 0;
+            position = { lr: { x: 100, y: 300 }, momentum: { x: 100, y: 300 } };
+            paths = { lr: [], momentum: [] };
+            
+            const canvas = document.getElementById('pathCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawPaths();
+            }
+            
+            updateControls();
+        }
+
+        function compareScenarios() {
+            // Show multiple scenarios with different settings
+            const scenarios = [
+                { lr: 0.01, mom: 0.0, name: "Low LR, No Momentum" },
+                { lr: 0.01, mom: 0.9, name: "Low LR + Momentum" },
+                { lr: 0.1, mom: 0.0, name: "High LR, No Momentum" },
+                { lr: 0.1, mom: 0.9, name: "High LR + Momentum" }
+            ];
+            
+            alert("🎯 Scenario Comparison:\n\n" + 
+                  scenarios.map((s, i) => 
+                      `${i+1}. ${s.name}\n   LR: ${s.lr}, Momentum: ${s.mom}`
+                  ).join('\n\n') +
+                  "\n\nTry adjusting the sliders to test these scenarios!");
+        }
+
+        // Event listeners
+        document.getElementById('lrSlider').addEventListener('input', updateControls);
+        document.getElementById('momentumSlider').addEventListener('input', updateControls);
+
+        // Initialize
+        updateControls();
+        
+        // Initial canvas setup
+        window.addEventListener('load', function() {
+            setTimeout(drawPaths, 100);
+        });
+    </script>
+</body>
+</html>
