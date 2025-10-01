@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bias-Variance Trade-off</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+        }
+        
+        .main-title {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        .key-formula {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: center;
+            margin: 20px 0;
+            border: 2px solid #ffd700;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover, .nav-btn.active {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            transform: translateY(-2px);
+        }
+        
+        .section {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+        
+        .concept-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .concept-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .bias-box { border-left-color: #ff6b6b; }
+        .variance-box { border-left-color: #4ecdc4; }
+        .tradeoff-box { border-left-color: #ffd700; }
+        
+        .concept-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .bullseye-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .bullseye-scenario {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .target-visual {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            margin: 0 auto 15px;
+            position: relative;
+            border: 3px solid #333;
+        }
+        
+        .bullseye-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 15px;
+            height: 15px;
+            background: #ff6b6b;
+            border-radius: 50%;
+        }
+        
+        .scenario-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+        
+        .code-box {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .code-title {
+            color: #4ecdc4;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .keyword { color: #ff6b6b; }
+        .string { color: #ffd700; }
+        .number { color: #4ecdc4; }
+        .comment { color: #a8e6cf; font-style: italic; }
+        
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+        
+        .example-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid;
+        }
+        
+        .underfitting { border-left-color: #ff6b6b; }
+        .overfitting { border-left-color: #4ecdc4; }
+        .balanced { border-left-color: #ffd700; }
+        
+        .example-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .metrics {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        @media (max-width: 768px) {
+            .concepts-grid, .bullseye-section, .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-title {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="main-title">Bias-Variance Trade-off</div>
+            <div class="subtitle">The Fundamental ML Concept That Explains Everything</div>
+            <div class="key-formula">
+                Total Error = Bias² + Variance + Irreducible Error
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="showSection('concepts')">📚 What Are They?</button>
+            <button class="nav-btn" onclick="showSection('bullseye')">🎯 Bullseye Analogy</button>
+            <button class="nav-btn" onclick="showSection('examples')">💻 Real Examples</button>
+            <button class="nav-btn" onclick="showSection('solutions')">🔧 How to Fix</button>
+        </div>
+
+        <!-- Concepts Section -->
+        <div id="concepts" class="section active">
+            <div class="section-title">📚 Understanding Bias and Variance</div>
+            
+            <div class="concepts-grid">
+                <div class="concept-box bias-box">
+                    <div class="concept-title">🎯 Bias</div>
+                    <div style="font-size: 1.1em; margin-bottom: 15px;">
+                        <strong>Bias = How wrong your model is on average</strong>
+                    </div>
+                    <div style="background: rgba(255,107,107,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <strong>Simple Explanation:</strong><br>
+                        Like a broken scale that always adds 5 pounds. 
+                        It's consistently wrong in the same direction.
+                    </div>
+                    <div>
+                        <strong>📊 Characteristics:</strong><br>
+                        • Systematic error that doesn't improve with more data<br>
+                        • Model is too simple to capture true patterns<br>
+                        • Underfitting problem<br>
+                        • High training error
+                    </div>
+                </div>
+
+                <div class="concept-box variance-box">
+                    <div class="concept-title">📊 Variance</div>
+                    <div style="font-size: 1.1em; margin-bottom: 15px;">
+                        <strong>Variance = How much your model changes with different data</strong>
+                    </div>
+                    <div style="background: rgba(78,205,196,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <strong>Simple Explanation:</strong><br>
+                        Like a moody person who gives different answers 
+                        to the same question depending on their mood.
+                    </div>
+                    <div>
+                        <strong>📈 Characteristics:</strong><br>
+                        • Model is too sensitive to training data<br>
+                        • Small data changes → big model changes<br>
+                        • Overfitting problem<br>
+                        • Large gap between training and validation error
+                    </div>
+                </div>
+
+                <div class="concept-box tradeoff-box">
+                    <div class="concept-title">⚖️ The Trade-off</div>
+                    <div style="font-size: 1.1em; margin-bottom: 15px;">
+                        <strong>You can't minimize both at the same time!</strong>
+                    </div>
+                    <div style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <strong>The Dilemma:</strong><br>
+                        Make model more complex → Less bias, More variance<br>
+                        Make model simpler → More bias, Less variance
+                    </div>
+                    <div>
+                        <strong>🎯 Goal:</strong><br>
+                        Find the sweet spot that minimizes total error on NEW data, 
+                        not just training data!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bullseye Section -->
+        <div id="bullseye" class="section">
+            <div class="section-title">🎯 The Famous Bullseye Analogy</div>
+            <div style="text-align: center; margin-bottom: 30px; font-size: 1.2em;">
+                Each dart throw = training a model on different datasets
+            </div>
+            
+            <div class="bullseye-section">
+                <div class="bullseye-scenario">
+                    <div class="target-visual">
+                        <div class="bullseye-center"></div>
+                        <div style="position: absolute; top: 45%; left: 45%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 50%; left: 52%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 48%; left: 48%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 52%; left: 50%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                    </div>
+                    <div class="scenario-title">✅ Low Bias, Low Variance</div>
+                    <div>
+                        <strong>IDEAL:</strong> Tight cluster near center<br>
+                        Accurate AND consistent<br>
+                        <em style="color: #4ecdc4;">Perfect model!</em>
+                    </div>
+                </div>
+                
+                <div class="bullseye-scenario">
+                    <div class="target-visual">
+                        <div class="bullseye-center"></div>
+                        <div style="position: absolute; top: 30%; left: 40%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 60%; left: 55%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 45%; left: 70%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 65%; left: 35%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                    </div>
+                    <div class="scenario-title">🟡 Low Bias, High Variance</div>
+                    <div>
+                        <strong>OVERFITTING:</strong> Scattered around center<br>
+                        Average is correct, but inconsistent<br>
+                        <em style="color: #ffd700;">Complex models</em>
+                    </div>
+                </div>
+                
+                <div class="bullseye-scenario">
+                    <div class="target-visual">
+                        <div class="bullseye-center"></div>
+                        <div style="position: absolute; top: 25%; left: 25%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 28%; left: 22%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 22%; left: 28%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 26%; left: 26%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                    </div>
+                    <div class="scenario-title">🔴 High Bias, Low Variance</div>
+                    <div>
+                        <strong>UNDERFITTING:</strong> Tight cluster, wrong location<br>
+                        Consistent but systematically wrong<br>
+                        <em style="color: #ff6b6b;">Simple models</em>
+                    </div>
+                </div>
+                
+                <div class="bullseye-scenario">
+                    <div class="target-visual">
+                        <div class="bullseye-center"></div>
+                        <div style="position: absolute; top: 20%; left: 80%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 75%; left: 25%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 30%; left: 15%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                        <div style="position: absolute; top: 80%; left: 70%; width: 6px; height: 6px; background: #333; border-radius: 50%;"></div>
+                    </div>
+                    <div class="scenario-title">💥 High Bias, High Variance</div>
+                    <div>
+                        <strong>DISASTER:</strong> Scattered everywhere<br>
+                        Neither accurate nor consistent<br>
+                        <em style="color: #ff6b6b;">Broken model!</em>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,215,0,0.2); border-radius: 15px; padding: 25px; margin: 25px 0;">
+                <h3 style="color: #ffd700; text-align: center; margin-bottom: 15px;">💡 Key Insight</h3>
+                <div style="font-size: 1.2em; text-align: center; line-height: 1.7;">
+                    <strong>🎯 Bias:</strong> "Am I aiming at the right target?" (Accuracy)<br>
+                    <strong>📊 Variance:</strong> "How consistent is my aim?" (Precision)<br>
+                    <strong>⚖️ Trade-off:</strong> Perfect accuracy + Perfect consistency = Impossible!
+                </div>
+            </div>
+        </div>
+
+        <!-- Examples Section -->
+        <div id="examples" class="section">
+            <div class="section-title">💻 Real ML Examples</div>
+            
+            <div class="examples-grid">
+                <div class="example-card underfitting">
+                    <div class="example-title">🔴 High Bias Examples (Underfitting)</div>
+                    <div>
+                        <strong>🤖 Common Scenarios:</strong><br>
+                        • Linear regression on non-linear data<br>
+                        • Decision tree with max_depth=1<br>
+                        • Neural network with too few neurons<br>
+                        • K-NN with very large K (K=100)
+                    </div>
+                    <div class="metrics">
+                        Training Error: 0.25 (High)<br>
+                        Validation Error: 0.26 (High)<br>
+                        Gap: 0.01 (Small)
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>🎯 Diagnosis:</strong> Model is too simple to capture patterns
+                    </div>
+                </div>
+
+                <div class="example-card overfitting">
+                    <div class="example-title">🔵 High Variance Examples (Overfitting)</div>
+                    <div>
+                        <strong>🧠 Common Scenarios:</strong><br>
+                        • Deep decision trees without limits<br>
+                        • Neural networks without regularization<br>
+                        • K-NN with K=1<br>
+                        • Polynomial regression with degree=15
+                    </div>
+                    <div class="metrics">
+                        Training Error: 0.02 (Very Low)<br>
+                        Validation Error: 0.35 (High)<br>
+                        Gap: 0.33 (Large!)
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>🎯 Diagnosis:</strong> Model memorized training data
+                    </div>
+                </div>
+
+                <div class="example-card balanced">
+                    <div class="example-title">✅ Balanced Examples (Just Right)</div>
+                    <div>
+                        <strong>🎯 Sweet Spot Models:</strong><br>
+                        • Random Forest with proper tuning<br>
+                        • Regularized neural networks<br>
+                        • Cross-validated models<br>
+                        • XGBoost with early stopping
+                    </div>
+                    <div class="metrics">
+                        Training Error: 0.12 (Low)<br>
+                        Validation Error: 0.15 (Low)<br>
+                        Gap: 0.03 (Small)
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>🎯 Diagnosis:</strong> Model generalizes well!
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-box">
+                <div class="code-title">📊 Diagnosing Bias vs Variance in Your Models</div>
+                <div style="margin: 8px 0;"><span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> learning_curve</div>
+                <div style="margin: 8px 0;"><span class="keyword">from</span> sklearn.tree <span class="keyword">import</span> DecisionTreeClassifier</div>
+                <div style="margin: 8px 0;"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="comment"># Test different model complexities</span></div>
+                <div style="margin: 8px 0;">models = {</div>
+                <div style="margin: 8px 0;">    <span class="string">'Simple'</span>: DecisionTreeClassifier(max_depth=<span class="number">1</span>),  <span class="comment"># High bias</span></div>
+                <div style="margin: 8px 0;">    <span class="string">'Balanced'</span>: DecisionTreeClassifier(max_depth=<span class="number">5</span>),  <span class="comment"># Balanced</span></div>
+                <div style="margin: 8px 0;">    <span class="string">'Complex'</span>: DecisionTreeClassifier(),  <span class="comment"># High variance</span></div>
+                <div style="margin: 8px 0;">}</div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="keyword">for</span> name, model <span class="keyword">in</span> models.items():</div>
+                <div style="margin: 8px 0;">    train_sizes, train_scores, val_scores = learning_curve(</div>
+                <div style="margin: 8px 0;">        model, X, y, cv=<span class="number">5</span>, train_sizes=np.<span class="keyword">linspace</span>(<span class="number">0.1</span>, <span class="number">1.0</span>, <span class="number">10</span>)</div>
+                <div style="margin: 8px 0;">    )</div>
+                <div style="margin: 8px 0;">    </div>
+                <div style="margin: 8px 0;">    train_mean = train_scores.mean(axis=<span class="number">1</span>)</div>
+                <div style="margin: 8px 0;">    val_mean = val_scores.mean(axis=<span class="number">1</span>)</div>
+                <div style="margin: 8px 0;">    </div>
+                <div style="margin: 8px 0;">    final_train_error = <span class="number">1</span> - train_mean[-<span class="number">1</span>]</div>
+                <div style="margin: 8px 0;">    final_val_error = <span class="number">1</span> - val_mean[-<span class="number">1</span>]</div>
+                <div style="margin: 8px 0;">    gap = final_val_error - final_train_error</div>
+                <div style="margin: 8px 0;">    </div>
+                <div style="margin: 8px 0;">    print(<span class="string">f"{name}: Train Error={final_train_error:.3f}, Val Error={final_val_error:.3f}, Gap={gap:.3f}"</span>)</div>
+                <div style="margin: 8px 0;">    </div>
+                <div style="margin: 8px 0;">    <span class="comment"># Diagnosis</span></div>
+                <div style="margin: 8px 0;">    <span class="keyword">if</span> final_train_error > <span class="number">0.2</span> <span class="keyword">and</span> gap < <span class="number">0.05</span>:</div>
+                <div style="margin: 8px 0;">        print(<span class="string">f"  → High Bias (Underfitting)"</span>)</div>
+                <div style="margin: 8px 0;">    <span class="keyword">elif</span> gap > <span class="number">0.1</span>:</div>
+                <div style="margin: 8px 0;">        print(<span class="string">f"  → High Variance (Overfitting)"</span>)</div>
+                <div style="margin: 8px 0;">    <span class="keyword">else</span>:</div>
+                <div style="margin: 8px 0;">        print(<span class="string">f"  → Well Balanced!"</span>)</div>
+            </div>
+        </div>
+
+        <!-- Solutions Section -->
+        <div id="solutions" class="section">
+            <div class="section-title">🔧 How to Fix Bias and Variance Issues</div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0;">
+                <div style="background: rgba(255,107,107,0.2); border-radius: 15px; padding: 25px;">
+                    <h3 style="color: #ff6b6b; margin-bottom: 20px; text-align: center;">🔴 Fixing High Bias (Underfitting)</h3>
+                    <div style="font-size: 1.1em;">
+                        <strong>💡 Make your model more powerful:</strong><br><br>
+                        ✅ <strong>Increase complexity:</strong><br>
+                        • More layers in neural networks<br>
+                        • Deeper decision trees<br>
+                        • Higher polynomial degree<br><br>
+                        
+                        ✅ <strong>Add features:</strong><br>
+                        • Feature engineering<br>
+                        • Polynomial features<br>
+                        • Domain knowledge<br><br>
+                        
+                        ✅ <strong>Reduce constraints:</strong><br>
+                        • Less regularization<br>
+                        • Train longer<br>
+                        • More powerful algorithms
+                    </div>
+                </div>
+                
+                <div style="background: rgba(78,205,196,0.2); border-radius: 15px; padding: 25px;">
+                    <h3 style="color: #4ecdc4; margin-bottom: 20px; text-align: center;">🔵 Fixing High Variance (Overfitting)</h3>
+                    <div style="font-size: 1.1em;">
+                        <strong>💡 Make your model more stable:</strong><br><br>
+                        ✅ <strong>Get more data:</strong><br>
+                        • Collect more training examples<br>
+                        • Data augmentation<br>
+                        • Synthetic data generation<br><br>
+                        
+                        ✅ <strong>Add regularization:</strong><br>
+                        • L1/L2 regularization<br>
+                        • Dropout in neural networks<br>
+                        • Early stopping<br><br>
+                        
+                        ✅ <strong>Use ensembles:</strong><br>
+                        • Random Forest (bagging)<br>
+                        • Model averaging<br>
+                        • Cross-validation
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-box">
+                <div class="code-title">🛠️ Practical Solutions in Code</div>
+                <div style="margin: 8px 0;"><span class="comment"># For HIGH BIAS (Underfitting):</span></div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="comment"># 1. Increase model complexity</span></div>
+                <div style="margin: 8px 0;">simple_tree = DecisionTreeClassifier(max_depth=<span class="number">1</span>)  <span class="comment"># High bias</span></div>
+                <div style="margin: 8px 0;">complex_tree = DecisionTreeClassifier(max_depth=<span class="number">10</span>)  <span class="comment"># Lower bias</span></div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="comment"># 2. Add polynomial features</span></div>
+                <div style="margin: 8px 0;"><span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> PolynomialFeatures</div>
+                <div style="margin: 8px 0;">poly = PolynomialFeatures(degree=<span class="number">3</span>)  <span class="comment"># Add complexity</span></div>
+                <div style="margin: 8px 0;">X_poly = poly.fit_transform(X)</div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="comment"># For HIGH VARIANCE (Overfitting):</span></div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="comment"># 1. Add regularization</span></div>
+                <div style="margin: 8px 0;"><span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> Ridge</div>
+                <div style="margin: 8px 0;">ridge = Ridge(alpha=<span class="number">1.0</span>)  <span class="comment"># L2 regularization</span></div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="comment"># 2. Use ensemble methods</span></div>
+                <div style="margin: 8px 0;"><span class="keyword">from</span> sklearn.ensemble <span class="keyword">import</span> RandomForestClassifier</div>
+                <div style="margin: 8px 0;">rf = RandomForestClassifier(n_estimators=<span class="number">100</span>)  <span class="comment"># Reduces variance</span></div>
+                <div style="margin: 8px 0;"></div>
+                <div style="margin: 8px 0;"><span class="comment"># 3. Early stopping for neural networks</span></div>
+                <div style="margin: 8px 0;"><span class="keyword">from</span> tensorflow.keras.callbacks <span class="keyword">import</span> EarlyStopping</div>
+                <div style="margin: 8px 0;">early_stop = EarlyStopping(patience=<span class="number">10</span>, restore_best_weights=<span class="keyword">True</span>)</div>
+                <div style="margin: 8px 0;">model.fit(X, y, validation_split=<span class="number">0.2</span>, callbacks=[early_stop])</div>
+            </div>
+        </div>
+
+        <!-- Final Summary -->
+        <div style="background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 20px; padding: 40px; margin: 40px 0; text-align: center;">
+            <h2 style="margin-bottom: 25px;">🎓 The Ultimate Bias-Variance Cheat Sheet</h2>
+            <div style="font-size: 1.2em; line-height: 1.8; max-width: 800px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 25px 0;">
+                    <div style="background: rgba(255,107,107,0.3); padding: 20px; border-radius: 15px;">
+                        <strong>🔴 High Bias?</strong><br>
+                        Training error high<br>
+                        → Make model MORE complex
+                    </div>
+                    <div style="background: rgba(78,205,196,0.3); padding: 20px; border-radius: 15px;">
+                        <strong>🔵 High Variance?</strong><br>
+                        Big train/val gap<br>
+                        → Make model LESS complex
+                    </div>
+                    <div style="background: rgba(255,215,0,0.3); padding: 20px; border-radius: 15px;">
+                        <strong>🟡 Just Right?</strong><br>
+                        Low errors, small gap<br>
+                        → You're done! 🎉
+                    </div>
+                </div>
+                <p style="margin-top: 25px;">
+                    <strong>🎯 Remember:</strong> The goal isn't perfect training accuracy - 
+                    it's the best performance on NEW, unseen data! 🚀
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from all nav buttons
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Activate current button
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Bias-Variance guide loaded successfully!');
+        });
+    </script>
+</body>
+</html>
