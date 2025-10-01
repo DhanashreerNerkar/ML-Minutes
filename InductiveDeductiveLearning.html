@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inductive vs Deductive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+        }
+        
+        .main-title {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 4s ease infinite;
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        .comparison-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .approach-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 35px;
+            backdrop-filter: blur(15px);
+            border: 4px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .approach-box:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .inductive-box {
+            border-color: #4ecdc4;
+        }
+        
+        .deductive-box {
+            border-color: #ffd700;
+        }
+        
+        .approach-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .inductive-title {
+            color: #4ecdc4;
+        }
+        
+        .deductive-title {
+            color: #ffd700;
+        }
+        
+        .approach-tagline {
+            text-align: center;
+            font-size: 1.2em;
+            font-style: italic;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .process-flow {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .flow-step {
+            margin: 12px 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step-number {
+            background: #ffd700;
+            color: #333;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover, .nav-btn.active {
+            background: linear-gradient(45deg, #ffd700, #ff9ff3);
+            transform: translateY(-2px);
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .example-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+            border-left: 6px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+        
+        .inductive-example {
+            border-left-color: #4ecdc4;
+        }
+        
+        .deductive-example {
+            border-left-color: #ffd700;
+        }
+        
+        .example-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .example-icon {
+            font-size: 1.3em;
+        }
+        
+        .example-scenario {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .scenario-label {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 8px;
+        }
+        
+        .observation-box {
+            background: rgba(78, 205, 196, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .rule-box {
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ffd700;
+        }
+        
+        .conclusion-box {
+            background: rgba(255, 107, 107, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .ml-connection {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .ml-title {
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-overview {
+                grid-template-columns: 1fr;
+            }
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-title {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="main-title">Inductive vs Deductive Learning</div>
+            <div class="subtitle">Understanding Two Fundamental Reasoning Approaches in ML</div>
+        </div>
+        
+        <!-- Overview Comparison -->
+        <div class="comparison-overview">
+            <div class="approach-box inductive-box">
+                <div class="approach-title inductive-title">
+                    <span>🔍</span>
+                    Inductive Learning
+                </div>
+                <div class="approach-tagline">
+                    "Specific → General"
+                </div>
+                <div class="process-flow">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div>Observe specific examples</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div>Find patterns in the data</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div>Create general rule/model</div>
+                    </div>
+                </div>
+                <div style="background: rgba(78,205,196,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    <strong>🎯 Key Idea:</strong> Learn from examples, generalize to new cases
+                </div>
+                <div style="text-align: center; font-size: 1.1em; margin-top: 15px;">
+                    <strong>Most ML is inductive!</strong><br>
+                    Training data → Learned model
+                </div>
+            </div>
+
+            <div class="approach-box deductive-box">
+                <div class="approach-title deductive-title">
+                    <span>🧮</span>
+                    Deductive Learning
+                </div>
+                <div class="approach-tagline">
+                    "General → Specific"
+                </div>
+                <div class="process-flow">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div>Start with general rules/theory</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div>Apply rules to specific cases</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div>Make logical conclusions</div>
+                    </div>
+                </div>
+                <div style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    <strong>🎯 Key Idea:</strong> Apply known rules to reach guaranteed conclusions
+                </div>
+                <div style="text-align: center; font-size: 1.1em; margin-top: 15px;">
+                    <strong>Less common in ML!</strong><br>
+                    General rules → Specific predictions
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="showSection('inductive-examples')">🔍 Inductive Examples</button>
+            <button class="nav-btn" onclick="showSection('deductive-examples')">🧮 Deductive Examples</button>
+            <button class="nav-btn" onclick="showSection('comparison')">⚖️ Side-by-Side</button>
+        </div>
+
+        <!-- Inductive Examples Section -->
+        <div id="inductive-examples" class="section active">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #4ecdc4; font-size: 2.5em; margin-bottom: 15px;">🔍 Inductive Learning Examples</h2>
+                <div style="font-size: 1.2em; opacity: 0.9;">Learning patterns from specific observations</div>
+            </div>
+
+            <div class="examples-grid">
+                <!-- Inductive Example 1 -->
+                <div class="example-card inductive-example">
+                    <div class="example-title">
+                        <span class="example-icon">📧</span>
+                        Example 1: Spam Email Detection
+                    </div>
+                    
+                    <div class="example-scenario">
+                        <div class="scenario-label">📊 Training Phase (Learning from examples):</div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 1:</strong><br>
+                            Email: "You won $1 million!"<br>
+                            Label: SPAM ✓
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 2:</strong><br>
+                            Email: "FREE prize! Click now!"<br>
+                            Label: SPAM ✓
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 3:</strong><br>
+                            Email: "Meeting at 3pm tomorrow"<br>
+                            Label: NOT SPAM ✓
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 4:</strong><br>
+                            Email: "Your invoice is attached"<br>
+                            Label: NOT SPAM ✓
+                        </div>
+                        
+                        <div class="conclusion-box">
+                            <strong>🧠 Pattern Learned (Inductive Rule):</strong><br>
+                            Emails with words like "FREE", "won", "$$$", "click now" are usually spam!<br>
+                            Professional language with specific details is usually legitimate.
+                        </div>
+                    </div>
+                    
+                    <div class="ml-connection">
+                        <div class="ml-title">🤖 ML Connection:</div>
+                        This is exactly how classification models work! They observe labeled examples 
+                        and learn patterns to classify new, unseen emails.
+                    </div>
+                </div>
+
+                <!-- Inductive Example 2 -->
+                <div class="example-card inductive-example">
+                    <div class="example-title">
+                        <span class="example-icon">🏠</span>
+                        Example 2: House Price Prediction
+                    </div>
+                    
+                    <div class="example-scenario">
+                        <div class="scenario-label">📊 Training Data (Observations):</div>
+                        
+                        <div class="observation-box">
+                            <strong>House 1:</strong><br>
+                            3 bedrooms, 2000 sq ft, good location<br>
+                            Price: $400,000
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>House 2:</strong><br>
+                            2 bedrooms, 1200 sq ft, average location<br>
+                            Price: $250,000
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>House 3:</strong><br>
+                            4 bedrooms, 2500 sq ft, excellent location<br>
+                            Price: $550,000
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>House 4:</strong><br>
+                            2 bedrooms, 1000 sq ft, poor location<br>
+                            Price: $180,000
+                        </div>
+                        
+                        <div class="conclusion-box">
+                            <strong>🧠 Pattern Learned (Inductive Model):</strong><br>
+                            Price ≈ $100/sq ft × size + $50k × bedrooms + location_bonus<br>
+                            More bedrooms + bigger size + better location = higher price
+                        </div>
+                    </div>
+                    
+                    <div class="ml-connection">
+                        <div class="ml-title">🤖 ML Connection:</div>
+                        This is regression! Model learns the relationship between features (bedrooms, size, location) 
+                        and target (price) from training examples.
+                    </div>
+                </div>
+
+                <!-- Inductive Example 3 -->
+                <div class="example-card inductive-example">
+                    <div class="example-title">
+                        <span class="example-icon">🐶</span>
+                        Example 3: Animal Classification
+                    </div>
+                    
+                    <div class="example-scenario">
+                        <div class="scenario-label">📊 Training Examples:</div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 1:</strong><br>
+                            4 legs, barks, wags tail, loyal<br>
+                            Label: DOG ✓
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 2:</strong><br>
+                            4 legs, meows, purrs, independent<br>
+                            Label: CAT ✓
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 3:</strong><br>
+                            2 legs, flies, has feathers, chirps<br>
+                            Label: BIRD ✓
+                        </div>
+                        
+                        <div class="observation-box">
+                            <strong>Observation 4:</strong><br>
+                            4 legs, barks, wags tail, playful<br>
+                            Label: DOG ✓
+                        </div>
+                        
+                        <div class="conclusion-box">
+                            <strong>🧠 Pattern Learned (Inductive Rules):</strong><br>
+                            IF (4 legs AND barks AND wags tail) THEN probably DOG<br>
+                            IF (4 legs AND meows AND purrs) THEN probably CAT<br>
+                            IF (2 legs AND flies AND feathers) THEN probably BIRD
+                        </div>
+                    </div>
+                    
+                    <div class="ml-connection">
+                        <div class="ml-title">🤖 ML Connection:</div>
+                        This is multi-class classification! Decision trees and neural networks learn 
+                        these kinds of rules from labeled training examples.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deductive Examples Section -->
+        <div id="deductive-examples" class="section">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #ffd700; font-size: 2.5em; margin-bottom: 15px;">🧮 Deductive Learning Examples</h2>
+                <div style="font-size: 1.2em; opacity: 0.9;">Applying general rules to specific cases</div>
+            </div>
+
+            <div class="examples-grid">
+                <!-- Deductive Example 1 -->
+                <div class="example-card deductive-example">
+                    <div class="example-title">
+                        <span class="example-icon">🎓</span>
+                        Example 1: Student Grade Prediction
+                    </div>
+                    
+                    <div class="example-scenario">
+                        <div class="scenario-label">📜 General Rules (Given):</div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 1:</strong> If score ≥ 90% → Grade A
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 2:</strong> If score ≥ 80% AND score < 90% → Grade B
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 3:</strong> If score ≥ 70% AND score < 80% → Grade C
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 4:</strong> If score < 70% → Grade F
+                        </div>
+                        
+                        <div class="conclusion-box">
+                            <strong>🎯 Apply to Specific Cases:</strong><br>
+                            Student Alice scored 92% → Apply Rule 1 → Grade A<br>
+                            Student Bob scored 85% → Apply Rule 2 → Grade B<br>
+                            Student Carol scored 65% → Apply Rule 4 → Grade F
+                        </div>
+                    </div>
+                    
+                    <div class="ml-connection">
+                        <div class="ml-title">🤖 ML Connection:</div>
+                        This is rule-based systems! Expert systems use predefined rules. 
+                        No learning from data - just logical application of known rules.
+                    </div>
+                </div>
+
+                <!-- Deductive Example 2 -->
+                <div class="example-card deductive-example">
+                    <div class="example-title">
+                        <span class="example-icon">🩺</span>
+                        Example 2: Medical Diagnosis System
+                    </div>
+                    
+                    <div class="example-scenario">
+                        <div class="scenario-label">📜 General Medical Rules (Expert Knowledge):</div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 1:</strong> IF (fever > 102°F AND cough AND body_ache) 
+                            THEN likely Flu
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 2:</strong> IF (fever > 103°F AND difficulty_breathing AND chest_pain) 
+                            THEN likely Pneumonia → URGENT
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 3:</strong> IF (rash AND fever AND sore_throat) 
+                            THEN likely Strep Throat
+                        </div>
+                        
+                        <div class="conclusion-box">
+                            <strong>🎯 Apply to Patient:</strong><br>
+                            Patient symptoms: Fever 103.5°F, difficulty breathing, chest pain<br>
+                            → Matches Rule 2<br>
+                            → Diagnosis: Likely Pneumonia<br>
+                            → Action: URGENT care needed!
+                        </div>
+                    </div>
+                    
+                    <div class="ml-connection">
+                        <div class="ml-title">🤖 ML Connection:</div>
+                        Traditional expert systems use deductive reasoning with doctor-provided rules. 
+                        Modern ML uses inductive learning from patient data instead.
+                    </div>
+                </div>
+
+                <!-- Deductive Example 3 -->
+                <div class="example-card deductive-example">
+                    <div class="example-title">
+                        <span class="example-icon">🚦</span>
+                        Example 3: Traffic Rule Application
+                    </div>
+                    
+                    <div class="example-scenario">
+                        <div class="scenario-label">📜 General Traffic Rules (Laws):</div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 1:</strong> IF (light is RED) 
+                            THEN STOP
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 2:</strong> IF (light is YELLOW) 
+                            THEN SLOW DOWN and PREPARE TO STOP
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 3:</strong> IF (light is GREEN) 
+                            THEN GO (if safe)
+                        </div>
+                        
+                        <div class="rule-box">
+                            <strong>Rule 4:</strong> IF (pedestrian in crosswalk) 
+                            THEN STOP (regardless of light)
+                        </div>
+                        
+                        <div class="conclusion-box">
+                            <strong>🎯 Apply to Situations:</strong><br>
+                            Situation 1: Light is RED → Apply Rule 1 → STOP<br>
+                            Situation 2: Light is GREEN + Pedestrian crossing → Apply Rule 4 → STOP<br>
+                            Situation 3: Light is YELLOW → Apply Rule 2 → SLOW DOWN
+                        </div>
+                    </div>
+                    
+                    <div class="ml-connection">
+                        <div class="ml-title">🤖 ML Connection:</div>
+                        Autonomous vehicles use BOTH! Deductive rules for safety-critical decisions, 
+                        inductive learning for recognizing objects and situations.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side-by-Side Comparison -->
+        <div id="comparison" class="section">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #ffd700; font-size: 2.5em; margin-bottom: 15px;">⚖️ Direct Comparison</h2>
+                <div style="font-size: 1.2em; opacity: 0.9;">Same Problem, Different Approaches</div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.15); border-radius: 20px; padding: 35px; margin: 30px 0;">
+                <h3 style="color: #ffd700; text-align: center; margin-bottom: 25px;">
+                    🌤️ Problem: Predict if it will rain tomorrow
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div style="background: rgba(78,205,196,0.2); border-radius: 15px; padding: 25px;">
+                        <h4 style="color: #4ecdc4; margin-bottom: 20px; text-align: center;">
+                            🔍 Inductive Approach
+                        </h4>
+                        
+                        <div style="font-size: 1.05em; line-height: 1.7;">
+                            <strong>Step 1: Collect Historical Data</strong><br>
+                            • Day 1: Cloudy, humid, low pressure → Rained ✓<br>
+                            • Day 2: Sunny, dry, high pressure → No rain ✓<br>
+                            • Day 3: Cloudy, humid, low pressure → Rained ✓<br>
+                            • Day 4: Partly cloudy, normal humidity → No rain ✓<br>
+                            ... (thousands of examples)<br><br>
+                            
+                            <strong>Step 2: Learn Patterns</strong><br>
+                            ML model discovers:<br>
+                            "When humidity > 80% AND pressure < 1010 mbar → 85% chance of rain"<br><br>
+                            
+                            <strong>Step 3: Predict Tomorrow</strong><br>
+                            Tomorrow's conditions: Humid (85%), Low pressure (1005)<br>
+                            → Model predicts: 87% chance of rain ☔
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                            <strong>🎯 Bottom-up learning:</strong> Observe many days → Find patterns → Predict future
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255,215,0,0.2); border-radius: 15px; padding: 25px;">
+                        <h4 style="color: #ffd700; margin-bottom: 20px; text-align: center;">
+                            🧮 Deductive Approach
+                        </h4>
+                        
+                        <div style="font-size: 1.05em; line-height: 1.7;">
+                            <strong>Step 1: Start with Known Physics Rules</strong><br>
+                            • Rule 1: Water vapor condenses when cooled<br>
+                            • Rule 2: Air cools as pressure drops<br>
+                            • Rule 3: Condensation forms clouds/rain<br>
+                            • Rule 4: Humidity measures water vapor<br><br>
+                            
+                            <strong>Step 2: Apply Rules Logically</strong><br>
+                            IF (high humidity) THEN (lots of water vapor)<br>
+                            IF (low pressure) THEN (air rises and cools)<br>
+                            IF (water vapor + cooling) THEN (condensation)<br>
+                            THEREFORE → Rain likely<br><br>
+                            
+                            <strong>Step 3: Logical Conclusion</strong><br>
+                            Tomorrow: High humidity + Low pressure<br>
+                            → Apply rules → Predict: Will rain ☔
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                            <strong>🎯 Top-down reasoning:</strong> Physics laws → Logical deduction → Conclusion
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- More comparisons -->
+            <div style="background: rgba(255,255,255,0.15); border-radius: 20px; padding: 35px; margin: 30px 0;">
+                <h3 style="color: #ffd700; text-align: center; margin-bottom: 25px;">
+                    🎮 Problem: Will a customer buy the product?
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div style="background: rgba(78,205,196,0.2); border-radius: 15px; padding: 25px;">
+                        <h4 style="color: #4ecdc4; margin-bottom: 15px; text-align: center;">
+                            🔍 Inductive: Learn from Customer Behavior
+                        </h4>
+                        
+                        <div style="font-size: 1.05em;">
+                            <strong>Observe 10,000 customers:</strong><br>
+                            • Young, high income, browsed 5+ times → Bought ✓<br>
+                            • Old, low income, quick visit → Didn't buy ✓<br>
+                            • Young, medium income, added to cart → Bought ✓<br>
+                            ... learn patterns ...<br><br>
+                            
+                            <strong>Model discovers:</strong><br>
+                            "Time on site > 10 min + Age < 35 → 70% buy probability"<br><br>
+                            
+                            <strong>New customer:</strong> 28 years old, browsing 15 min<br>
+                            → Predict: 75% likely to buy!
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255,215,0,0.2); border-radius: 15px; padding: 25px;">
+                        <h4 style="color: #ffd700; margin-bottom: 15px; text-align: center;">
+                            🧮 Deductive: Apply Business Rules
+                        </h4>
+                        
+                        <div style="font-size: 1.05em;">
+                            <strong>Business Rules (established):</strong><br>
+                            • IF customer spent > $500 last year → Likely buyer<br>
+                            • IF product in wishlist > 7 days → Likely buyer<br>
+                            • IF abandoned cart → Send discount email<br>
+                            • IF visited 3+ times → High intent<br><br>
+                            
+                            <strong>Logic chain:</strong><br>
+                            Customer visited 4 times + Product in wishlist<br>
+                            → Matches rules → High purchase intent<br><br>
+                            
+                            <strong>Action:</strong> Send personalized offer email
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.15); border-radius: 20px; padding: 35px; margin: 30px 0;">
+                <h3 style="color: #ffd700; text-align: center; margin-bottom: 25px;">
+                    🔒 Problem: Grant system access permission
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div style="background: rgba(78,205,196,0.2); border-radius: 15px; padding: 25px;">
+                        <h4 style="color: #4ecdc4; margin-bottom: 15px; text-align: center;">
+                            🔍 Inductive: Learn from Access Patterns
+                        </h4>
+                        
+                        <div style="font-size: 1.05em;">
+                            <strong>Training data (past decisions):</strong><br>
+                            • Engineer, project member, 9am-5pm → Granted ✓<br>
+                            • Manager, any project, 8am-6pm → Granted ✓<br>
+                            • Contractor, not on project, 2am → Denied ✓<br>
+                            • Intern, supervised, 10am-4pm → Granted ✓<br><br>
+                            
+                            <strong>ML learns:</strong><br>
+                            "Role + Project membership + Time = Access decision"<br><br>
+                            
+                            <strong>New request:</strong> Senior Dev, on project, 3pm<br>
+                            → Model predicts: GRANT ACCESS (95% confidence)
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(255,215,0,0.2); border-radius: 15px; padding: 25px;">
+                        <h4 style="color: #ffd700; margin-bottom: 15px; text-align: center;">
+                            🧮 Deductive: Apply Security Policy
+                        </h4>
+                        
+                        <div style="font-size: 1.05em;">
+                            <strong>Security Policy (predefined):</strong><br>
+                            • IF (employee AND on_project) THEN GRANT<br>
+                            • IF (manager) THEN GRANT<br>
+                            • IF (time is 12am-6am) THEN DENY<br>
+                            • IF (contractor AND NOT on_project) THEN DENY<br><br>
+                            
+                            <strong>Logical reasoning:</strong><br>
+                            Request: Contractor, NOT on project, 3pm<br>
+                            → Matches "contractor AND NOT on_project"<br>
+                            → Apply Rule 4<br>
+                            → Decision: DENY ACCESS<br><br>
+                            
+                            <strong>100% certain based on rules!</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final Summary -->
+        <div style="background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 20px; padding: 40px; margin: 40px 0;">
+            <h2 style="text-align: center; margin-bottom: 25px;">🎓 Key Takeaways</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 25px 0;">
+                <div style="background: rgba(78,205,196,0.3); padding: 25px; border-radius: 15px;">
+                    <h3 style="color: #4ecdc4; text-align: center; margin-bottom: 15px;">🔍 Inductive Learning</h3>
+                    <div style="font-size: 1.1em; line-height: 1.7;">
+                        <strong>Direction:</strong> Specific → General<br>
+                        <strong>Process:</strong> Observe examples → Find patterns<br>
+                        <strong>Strength:</strong> Discovers unknown patterns<br>
+                        <strong>Weakness:</strong> Not 100% certain<br>
+                        <strong>ML Usage:</strong> 95% of machine learning!<br>
+                        <strong>Examples:</strong> Classification, regression, clustering
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,215,0,0.3); padding: 25px; border-radius: 15px;">
+                    <h3 style="color: #ffd700; text-align: center; margin-bottom: 15px;">🧮 Deductive Learning</h3>
+                    <div style="font-size: 1.1em; line-height: 1.7;">
+                        <strong>Direction:</strong> General → Specific<br>
+                        <strong>Process:</strong> Apply rules → Logical conclusion<br>
+                        <strong>Strength:</strong> Guaranteed correct (if rules are correct)<br>
+                        <strong>Weakness:</strong> Need to know rules beforehand<br>
+                        <strong>ML Usage:</strong> Expert systems, rule engines<br>
+                        <strong>Examples:</strong> If-then systems, logic programming
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; font-size: 1.3em; margin-top: 30px; line-height: 1.8;">
+                <p style="margin-bottom: 15px;">
+                    <strong>💡 The Big Difference:</strong>
+                </p>
+                <p style="margin-bottom: 15px;">
+                    <strong>Inductive:</strong> "I've seen 100 swans and they're all white, so all swans are probably white"
+                </p>
+                <p>
+                    <strong>Deductive:</strong> "All birds have feathers, swans are birds, therefore swans have feathers"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from all buttons
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Activate current button
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Inductive vs Deductive guide loaded!');
+        });
+    </script>
+</body>
+</html>
