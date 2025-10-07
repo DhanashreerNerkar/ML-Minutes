@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-Squared (R²) - Crystal Clear Explanation with Examples</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 30px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6, #ec4899);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .header p {
+            font-size: 1.3em;
+            color: #666;
+            animation: fadeInUp 1s ease;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .section-title {
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .visual-demo {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .formula-box {
+            background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #3b82f6;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .concept-card:hover {
+            transform: translateX(5px);
+        }
+
+        .r2-display {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .r2-card {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            min-width: 200px;
+            transition: transform 0.3s ease;
+        }
+
+        .r2-card:hover {
+            transform: scale(1.05);
+        }
+
+        .r2-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .r2-label {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .r2-interpretation {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .perfect { color: #10b981; }
+        .good { color: #3b82f6; }
+        .moderate { color: #f59e0b; }
+        .poor { color: #ef4444; }
+        .zero { color: #6b7280; }
+
+        .example-box {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            border: 2px solid #6366f1;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.8;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: 'Python';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .interactive-demo {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            cursor: pointer;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            align-items: start;
+            gap: 15px;
+        }
+
+        .intuition-box {
+            background: linear-gradient(135deg, #d4f4dd, #bbf7d0);
+            border: 2px solid #22c55e;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2.5em; }
+            .concept-grid { grid-template-columns: 1fr; }
+            .r2-display { flex-direction: column; }
+        }
+    </style>
+    <script>
+        function updateR2Demo() {
+            const noise = document.getElementById('noiseLevel').value;
+            const r2Value = Math.max(0, 1 - noise/100).toFixed(3);
+            
+            document.getElementById('r2Result').textContent = r2Value;
+            document.getElementById('noiseValue').textContent = noise + '%';
+            
+            // Update interpretation
+            let interpretation = '';
+            let className = '';
+            if (r2Value >= 0.9) {
+                interpretation = 'Excellent fit! Model explains most variation';
+                className = 'perfect';
+            } else if (r2Value >= 0.7) {
+                interpretation = 'Good fit! Strong predictive power';
+                className = 'good';
+            } else if (r2Value >= 0.5) {
+                interpretation = 'Moderate fit. Reasonable predictions';
+                className = 'moderate';
+            } else if (r2Value >= 0.3) {
+                interpretation = 'Weak fit. Limited predictive power';
+                className = 'poor';
+            } else {
+                interpretation = 'Poor fit. Model not useful';
+                className = 'zero';
+            }
+            
+            const resultElement = document.getElementById('r2Result');
+            resultElement.className = 'r2-value ' + className;
+            document.getElementById('interpretation').textContent = interpretation;
+            
+            // Update visual
+            updateVisualization(noise);
+        }
+
+        function updateVisualization(noise) {
+            const canvas = document.getElementById('r2Canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, height-50);
+            ctx.lineTo(width-20, height-50);
+            ctx.moveTo(50, height-50);
+            ctx.lineTo(50, 20);
+            ctx.stroke();
+            
+            // Generate and draw data points
+            const n = 50;
+            const noiseLevel = noise / 100;
+            
+            ctx.fillStyle = '#3b82f6';
+            for (let i = 0; i < n; i++) {
+                const x = (i / n) * (width - 100) + 60;
+                const trueY = height - 50 - (i / n) * (height - 100);
+                const noisyY = trueY + (Math.random() - 0.5) * noiseLevel * 200;
+                
+                ctx.beginPath();
+                ctx.arc(x, noisyY, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            
+            // Draw regression line
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(60, height - 60);
+            ctx.lineTo(width - 30, 40);
+            ctx.stroke();
+            
+            // Draw mean line
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(50, height/2);
+            ctx.lineTo(width - 20, height/2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '12px sans-serif';
+            ctx.fillText('X', width - 15, height - 35);
+            ctx.fillText('Y', 35, 20);
+        }
+
+        window.onload = function() {
+            updateR2Demo();
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Understanding R-Squared (R²)</h1>
+            <p>The Most Important Metric in Regression - Explained Simply!</p>
+        </div>
+
+        <!-- What is R-Squared -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">🎯</span>
+                What is R-Squared?
+            </h2>
+            
+            <div class="intuition-box">
+                <h3 style="color: #166534; margin-bottom: 15px;">💡 Simple Intuition</h3>
+                <p style="font-size: 1.2em; line-height: 1.8;">
+                    <strong>R² tells you what percentage of your data's variation is explained by your model.</strong>
+                    <br><br>
+                    Think of it like this: If R² = 0.80, your model explains 80% of why your data varies, 
+                    and 20% remains unexplained (due to other factors or randomness).
+                </p>
+            </div>
+
+            <div class="formula-box">
+                R² = 1 - (SS_residual / SS_total)
+                <br>
+                <span style="font-size: 0.8em;">or equivalently</span>
+                <br>
+                R² = (SS_explained / SS_total)
+            </div>
+
+            <div class="visual-demo">
+                <svg width="600" height="400" viewBox="0 0 600 400">
+                    <!-- Title -->
+                    <text x="300" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">
+                        Breaking Down R-Squared Visually
+                    </text>
+                    
+                    <!-- Main plot area -->
+                    <rect x="50" y="50" width="500" height="300" fill="#f8f9fa" stroke="#ddd"/>
+                    
+                    <!-- Mean line (horizontal) -->
+                    <line x1="50" y1="200" x2="550" y2="200" stroke="#10b981" stroke-width="3" stroke-dasharray="8,4"/>
+                    <text x="560" y="205" fill="#10b981" font-size="12">Mean</text>
+                    
+                    <!-- Data points -->
+                    <g id="dataPoints">
+                        <circle cx="100" cy="280" r="6" fill="#3b82f6"/>
+                        <circle cx="150" cy="250" r="6" fill="#3b82f6"/>
+                        <circle cx="200" cy="220" r="6" fill="#3b82f6"/>
+                        <circle cx="250" cy="180" r="6" fill="#3b82f6"/>
+                        <circle cx="300" cy="160" r="6" fill="#3b82f6"/>
+                        <circle cx="350" cy="140" r="6" fill="#3b82f6"/>
+                        <circle cx="400" cy="120" r="6" fill="#3b82f6"/>
+                        <circle cx="450" cy="100" r="6" fill="#3b82f6"/>
+                        <circle cx="500" cy="80" r="6" fill="#3b82f6"/>
+                    </g>
+                    
+                    <!-- Regression line -->
+                    <line x1="70" y1="290" x2="530" y2="70" stroke="#ef4444" stroke-width="3"/>
+                    <text x="540" y="70" fill="#ef4444" font-size="12">Model</text>
+                    
+                    <!-- Total variation (from mean) -->
+                    <g stroke="#10b981" stroke-width="2" fill="none" opacity="0.6">
+                        <line x1="100" y1="280" x2="100" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="150" y1="250" x2="150" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="200" y1="220" x2="200" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="250" y1="180" x2="250" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="300" y1="160" x2="300" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="350" y1="140" x2="350" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="400" y1="120" x2="400" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="450" y1="100" x2="450" y2="200" stroke-dasharray="3,2"/>
+                        <line x1="500" y1="80" x2="500" y2="200" stroke-dasharray="3,2"/>
+                    </g>
+                    
+                    <!-- Residuals (from regression line) -->
+                    <g stroke="#8b5cf6" stroke-width="2" fill="none">
+                        <line x1="100" y1="280" x2="100" y2="270"/>
+                        <line x1="150" y1="250" x2="150" y2="245"/>
+                        <line x1="200" y1="220" x2="200" y2="220"/>
+                        <line x1="250" y1="180" x2="250" y2="195"/>
+                        <line x1="300" y1="160" x2="300" y2="170"/>
+                        <line x1="350" y1="140" x2="350" y2="145"/>
+                        <line x1="400" y1="120" x2="400" y2="120"/>
+                        <line x1="450" y1="100" x2="450" y2="95"/>
+                        <line x1="500" y1="80" x2="500" y2="70"/>
+                    </g>
+                    
+                    <!-- Legend -->
+                    <g transform="translate(60, 360)">
+                        <line x1="0" y1="0" x2="30" y2="0" stroke="#10b981" stroke-width="2" stroke-dasharray="3,2"/>
+                        <text x="35" y="5" font-size="12" fill="#666">Total Variation (SS_total)</text>
+                        
+                        <line x1="200" y1="0" x2="230" y2="0" stroke="#8b5cf6" stroke-width="2"/>
+                        <text x="235" y="5" font-size="12" fill="#666">Unexplained (SS_residual)</text>
+                        
+                        <rect x="400" y="-5" width="30" height="10" fill="#fbbf24" opacity="0.3"/>
+                        <text x="435" y="5" font-size="12" fill="#666">Explained by Model</text>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h4>📊 SS_total (Total Sum of Squares)</h4>
+                    <p>Total variation in your data from the mean</p>
+                    <p style="color: #10b981; margin-top: 10px;">Σ(yᵢ - ȳ)²</p>
+                    <p style="font-size: 0.9em; color: #666;">How much your data naturally varies</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>📉 SS_residual (Residual Sum of Squares)</h4>
+                    <p>Variation NOT explained by the model</p>
+                    <p style="color: #8b5cf6; margin-top: 10px;">Σ(yᵢ - ŷᵢ)²</p>
+                    <p style="font-size: 0.9em; color: #666;">The errors your model makes</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>✨ SS_explained</h4>
+                    <p>Variation explained by the model</p>
+                    <p style="color: #fbbf24; margin-top: 10px;">SS_total - SS_residual</p>
+                    <p style="font-size: 0.9em; color: #666;">How well your model captures patterns</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- R-Squared Interpretation -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">🎨</span>
+                How to Interpret R² Values
+            </h2>
+
+            <div class="r2-display">
+                <div class="r2-card">
+                    <div class="r2-label">Perfect Model</div>
+                    <div class="r2-value perfect">1.00</div>
+                    <div class="r2-interpretation">100% explained</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">Never happens in real life!</div>
+                </div>
+                
+                <div class="r2-card">
+                    <div class="r2-label">Excellent</div>
+                    <div class="r2-value perfect">0.90</div>
+                    <div class="r2-interpretation">90% explained</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">Very strong model</div>
+                </div>
+                
+                <div class="r2-card">
+                    <div class="r2-label">Good</div>
+                    <div class="r2-value good">0.70</div>
+                    <div class="r2-interpretation">70% explained</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">Useful predictions</div>
+                </div>
+                
+                <div class="r2-card">
+                    <div class="r2-label">Moderate</div>
+                    <div class="r2-value moderate">0.50</div>
+                    <div class="r2-interpretation">50% explained</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">Some predictive power</div>
+                </div>
+                
+                <div class="r2-card">
+                    <div class="r2-label">Weak</div>
+                    <div class="r2-value poor">0.30</div>
+                    <div class="r2-interpretation">30% explained</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">Limited usefulness</div>
+                </div>
+                
+                <div class="r2-card">
+                    <div class="r2-label">No Relationship</div>
+                    <div class="r2-value zero">0.00</div>
+                    <div class="r2-interpretation">0% explained</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">Model = mean line</div>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Good R²</th>
+                        <th>Why?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Physics/Engineering</strong></td>
+                        <td>0.90+</td>
+                        <td>Controlled experiments, precise measurements</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Biology/Medicine</strong></td>
+                        <td>0.50-0.80</td>
+                        <td>Natural variation, complex systems</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Social Sciences</strong></td>
+                        <td>0.20-0.50</td>
+                        <td>Human behavior is unpredictable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stock Market</strong></td>
+                        <td>0.10-0.30</td>
+                        <td>Highly random, many unknown factors</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Marketing/Sales</strong></td>
+                        <td>0.30-0.60</td>
+                        <td>Consumer behavior, external factors</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="warning-box">
+                <span style="font-size: 24px;">⚠️</span>
+                <div>
+                    <strong>Important Context:</strong> A "good" R² depends entirely on your field and problem! 
+                    An R² of 0.30 might be excellent for predicting human behavior but terrible for a physics experiment.
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Demo -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">🎮</span>
+                Interactive R² Demonstration
+            </h2>
+
+            <div class="interactive-demo">
+                <h3>See How Noise Affects R²</h3>
+                <div class="slider-container">
+                    <label for="noiseLevel">Noise Level: <span id="noiseValue">50%</span></label>
+                    <input type="range" id="noiseLevel" class="slider" min="0" max="100" value="50" oninput="updateR2Demo()">
+                </div>
+                
+                <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 30px;">
+                    <div>
+                        <canvas id="r2Canvas" width="400" height="300"></canvas>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="r2-label">R² Value</div>
+                        <div id="r2Result" class="r2-value">0.500</div>
+                        <div id="interpretation" style="margin-top: 10px;">Moderate fit</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step by Step Calculation -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">📝</span>
+                Step-by-Step R² Calculation from Your Data
+            </h2>
+
+            <div class="intuition-box">
+                <h3 style="color: #166534; margin-bottom: 15px;">📊 Working Through a Real Example</h3>
+                <p style="font-size: 1.1em; line-height: 1.8;">
+                    Let's calculate R² step-by-step using actual data. We have 3 data points with actual values (y) and predicted values (ŷ).
+                    We'll see exactly how R² = 0.678 is calculated.
+                </p>
+            </div>
+
+            <table class="comparison-table" style="font-family: monospace;">
+                <thead>
+                    <tr>
+                        <th>y (Actual)</th>
+                        <th>ŷ (Predicted)</th>
+                        <th>y - ȳ</th>
+                        <th>y - ŷ</th>
+                        <th>(y - ȳ)²</th>
+                        <th>(y - ŷ)²</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0.102041</td>
+                        <td>0.202446</td>
+                        <td>-0.1701</td>
+                        <td>-0.100</td>
+                        <td>0.0289201</td>
+                        <td>0.010081</td>
+                    </tr>
+                    <tr>
+                        <td>0.285714</td>
+                        <td>0.359791</td>
+                        <td>0.0136</td>
+                        <td>-0.074</td>
+                        <td>0.0001853</td>
+                        <td>0.005487</td>
+                    </tr>
+                    <tr>
+                        <td>0.428571</td>
+                        <td>0.469494</td>
+                        <td>0.1565</td>
+                        <td>-0.041</td>
+                        <td>0.0244832</td>
+                        <td>0.001675</td>
+                    </tr>
+                    <tr style="background-color: #f0f9ff; font-weight: bold;">
+                        <td colspan="4">Sum (Σ)</td>
+                        <td style="background: #d4f4dd;">0.0535886</td>
+                        <td style="background: #fee2e2;">0.0172431</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0;">
+                <div style="text-align: center; padding: 20px; background: #d4f4dd; border-radius: 10px; border: 2px solid #22c55e;">
+                    <h4 style="color: #166534;">TSS (Total Sum of Squares)</h4>
+                    <div style="font-size: 2em; font-weight: bold; color: #22c55e; margin: 10px 0;">0.0536</div>
+                    <p style="font-size: 0.9em;">Total variation from mean</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #fee2e2; border-radius: 10px; border: 2px solid #ef4444;">
+                    <h4 style="color: #991b1b;">RSS (Residual Sum of Squares)</h4>
+                    <div style="font-size: 2em; font-weight: bold; color: #ef4444; margin: 10px 0;">0.0172</div>
+                    <p style="font-size: 0.9em;">Unexplained variation</p>
+                </div>
+                <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); border-radius: 10px; border: 2px solid #6366f1;">
+                    <h4 style="color: #312e81;">R² Value</h4>
+                    <div style="font-size: 2em; font-weight: bold; color: #6366f1; margin: 10px 0;">0.6782</div>
+                    <p style="font-size: 0.9em;">67.82% explained!</p>
+                </div>
+            </div>
+
+            <div class="formula-box">
+                <h4 style="margin-bottom: 15px;">The Calculation:</h4>
+                R² = 1 - (RSS / TSS)
+                <br><br>
+                R² = 1 - (0.0172431 / 0.0535886)
+                <br><br>
+                R² = 1 - 0.3218
+                <br><br>
+                <span style="font-size: 1.3em; border: 3px solid white; padding: 10px; border-radius: 10px;">
+                    R² = 0.6782
+                </span>
+            </div>
+
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h4>📊 Step 1: Calculate Mean</h4>
+                    <p>ȳ = (0.102 + 0.286 + 0.429) / 3</p>
+                    <p style="font-weight: bold; color: #3b82f6;">ȳ = 0.2721</p>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">This is our baseline for comparison</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>📈 Step 2: Calculate TSS</h4>
+                    <p>For each point, find (y - ȳ)²</p>
+                    <p>Sum all squared differences</p>
+                    <p style="font-weight: bold; color: #22c55e;">TSS = 0.0536</p>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">Total variation to explain</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>📉 Step 3: Calculate RSS</h4>
+                    <p>For each point, find (y - ŷ)²</p>
+                    <p>Sum all squared errors</p>
+                    <p style="font-weight: bold; color: #ef4444;">RSS = 0.0172</p>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">What model couldn't explain</p>
+                </div>
+            </div>
+
+            <div class="example-box">
+                <h4 style="color: #312e81; margin-bottom: 15px;">🎯 What This R² = 0.6782 Means</h4>
+                <ul style="line-height: 2; margin-left: 20px;">
+                    <li><strong>67.82% of the variation</strong> in your actual values is explained by your model</li>
+                    <li><strong>32.18% remains unexplained</strong> (due to other factors or randomness)</li>
+                    <li>This is considered a <strong>good fit</strong> for most real-world applications</li>
+                    <li>Your model is <strong>much better than just using the mean</strong> (which would give R² = 0)</li>
+                </ul>
+            </div>
+
+            <div class="code-block">
+# Recreating Your Exact Calculation in Python
+import numpy as np
+import pandas as pd
+
+# Your exact data
+data = {
+    'y_actual': [0.102041, 0.285714, 0.428571],
+    'y_predicted': [0.20244557, 0.35979061, 0.4694941]
+}
+
+df = pd.DataFrame(data)
+
+# Step 1: Calculate mean of actual values
+y_mean = df['y_actual'].mean()
+print(f"Mean of y (ȳ): {y_mean:.6f}")
+
+# Step 2: Calculate deviations
+df['y_minus_ymean'] = df['y_actual'] - y_mean
+df['y_minus_yhat'] = df['y_actual'] - df['y_predicted']
+
+# Step 3: Square the deviations
+df['(y-ymean)^2'] = df['y_minus_ymean'] ** 2
+df['(y-yhat)^2'] = df['y_minus_yhat'] ** 2
+
+# Step 4: Calculate TSS and RSS
+TSS = df['(y-ymean)^2'].sum()
+RSS = df['(y-yhat)^2'].sum()
+
+print(f"\nTSS (Total Sum of Squares): {TSS:.7f}")
+print(f"RSS (Residual Sum of Squares): {RSS:.7f}")
+
+# Step 5: Calculate R²
+r_squared = 1 - (RSS / TSS)
+print(f"\nR² = 1 - (RSS/TSS)")
+print(f"R² = 1 - ({RSS:.7f}/{TSS:.7f})")
+print(f"R² = 1 - {RSS/TSS:.7f}")
+print(f"R² = {r_squared:.7f}")
+
+# Interpretation
+print(f"\n🎯 Interpretation:")
+print(f"Your model explains {r_squared*100:.2f}% of the variation in the data")
+print(f"Unexplained variation: {(1-r_squared)*100:.2f}%")
+
+# Alternative calculation using sklearn
+from sklearn.metrics import r2_score
+r2_sklearn = r2_score(df['y_actual'], df['y_predicted'])
+print(f"\nVerification using sklearn: {r2_sklearn:.7f}")
+
+# Visualize the components
+import matplotlib.pyplot as plt
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+# Bar chart of variance components
+components = ['Total\nVariation\n(TSS)', 'Explained\nVariation', 'Unexplained\nVariation\n(RSS)']
+values = [TSS, TSS - RSS, RSS]
+colors = ['#3b82f6', '#22c55e', '#ef4444']
+
+ax1.bar(components, values, color=colors, alpha=0.7, edgecolor='black', linewidth=2)
+ax1.set_ylabel('Sum of Squares', fontsize=12)
+ax1.set_title('Breakdown of Variation', fontsize=14, fontweight='bold')
+ax1.grid(axis='y', alpha=0.3)
+
+# Add percentage labels
+for i, (comp, val) in enumerate(zip(components, values)):
+    percentage = (val / TSS) * 100
+    ax1.text(i, val + 0.002, f'{percentage:.1f}%', 
+             ha='center', fontsize=11, fontweight='bold')
+
+# Scatter plot with predictions
+ax2.scatter(range(len(df)), df['y_actual'], s=100, color='#3b82f6', 
+           label='Actual Values', zorder=5, edgecolor='black', linewidth=2)
+ax2.scatter(range(len(df)), df['y_predicted'], s=100, color='#ef4444', 
+           marker='^', label='Predicted Values', zorder=5, edgecolor='black', linewidth=2)
+ax2.axhline(y=y_mean, color='#22c55e', linestyle='--', linewidth=2, 
+           label=f'Mean (ȳ = {y_mean:.3f})')
+
+# Draw residual lines
+for i, row in df.iterrows():
+    ax2.plot([i, i], [row['y_actual'], row['y_predicted']], 
+            'k--', alpha=0.5, linewidth=1)
+
+ax2.set_xlabel('Data Point', fontsize=12)
+ax2.set_ylabel('Value', fontsize=12)
+ax2.set_title(f'Actual vs Predicted (R² = {r_squared:.4f})', fontsize=14, fontweight='bold')
+ax2.legend(loc='best')
+ax2.grid(alpha=0.3)
+ax2.set_xticks(range(len(df)))
+ax2.set_xticklabels(['Point 1', 'Point 2', 'Point 3'])
+
+plt.tight_layout()
+plt.show()
+            </div>
+        </div>
+
+        <!-- Real Examples -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">🌍</span>
+                Real-World Examples with Actual R² Values
+            </h2>
+
+            <div class="example-box">
+                <h4 style="color: #312e81; margin-bottom: 15px;">🏠 Example 1: House Price Prediction</h4>
+                <p><strong>Model:</strong> Price based on size, bedrooms, location</p>
+                <p><strong>Typical R²:</strong> 0.70 - 0.85</p>
+                <p><strong>Interpretation:</strong> The model explains 70-85% of price variation. The remaining 15-30% might be due to factors like neighborhood trends, interior quality, or market timing.</p>
+            </div>
+
+            <div class="example-box">
+                <h4 style="color: #312e81; margin-bottom: 15px;">📈 Example 2: Stock Return Prediction</h4>
+                <p><strong>Model:</strong> Next day return based on historical patterns</p>
+                <p><strong>Typical R²:</strong> 0.02 - 0.10</p>
+                <p><strong>Interpretation:</strong> Only 2-10% of returns can be predicted! This is why stock markets are considered highly efficient and random.</p>
+            </div>
+
+            <div class="example-box">
+                <h4 style="color: #312e81; margin-bottom: 15px;">🎓 Example 3: Student Performance</h4>
+                <p><strong>Model:</strong> Test scores based on study hours, attendance, previous grades</p>
+                <p><strong>Typical R²:</strong> 0.40 - 0.60</p>
+                <p><strong>Interpretation:</strong> About half of performance variation is explained. Other factors like test anxiety, learning style, and home environment matter too.</p>
+            </div>
+
+            <div class="code-block">
+# Real Python Example: Understanding R² with Different Datasets
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Example 1: Strong Relationship (R² ≈ 0.85)
+print("="*60)
+print("EXAMPLE 1: STRONG RELATIONSHIP")
+print("="*60)
+
+X1 = np.random.rand(100, 1) * 10
+y1 = 2 * X1.squeeze() + 1 + np.random.randn(100) * 2  # Small noise
+
+model1 = LinearRegression()
+model1.fit(X1, y1)
+y1_pred = model1.predict(X1)
+r2_1 = r2_score(y1, y1_pred)
+
+print(f"R² Score: {r2_1:.4f}")
+print(f"Interpretation: Model explains {r2_1*100:.1f}% of the variation")
+print(f"This is EXCELLENT for most real-world applications!")
+
+# Calculate the components
+ss_total_1 = np.sum((y1 - y1.mean())**2)
+ss_residual_1 = np.sum((y1 - y1_pred)**2)
+ss_explained_1 = ss_total_1 - ss_residual_1
+
+print(f"\nBreakdown:")
+print(f"Total variation (SS_total):      {ss_total_1:.2f}")
+print(f"Explained by model (SS_explained): {ss_explained_1:.2f} ({ss_explained_1/ss_total_1*100:.1f}%)")
+print(f"Unexplained (SS_residual):        {ss_residual_1:.2f} ({ss_residual_1/ss_total_1*100:.1f}%)")
+
+# Example 2: Moderate Relationship (R² ≈ 0.50)
+print("\n" + "="*60)
+print("EXAMPLE 2: MODERATE RELATIONSHIP")
+print("="*60)
+
+X2 = np.random.rand(100, 1) * 10
+y2 = 2 * X2.squeeze() + 1 + np.random.randn(100) * 5  # More noise
+
+model2 = LinearRegression()
+model2.fit(X2, y2)
+y2_pred = model2.predict(X2)
+r2_2 = r2_score(y2, y2_pred)
+
+print(f"R² Score: {r2_2:.4f}")
+print(f"Interpretation: Model explains {r2_2*100:.1f}% of the variation")
+print(f"This is ACCEPTABLE for behavioral/social data")
+
+# Example 3: Weak Relationship (R² ≈ 0.10)
+print("\n" + "="*60)
+print("EXAMPLE 3: WEAK RELATIONSHIP")
+print("="*60)
+
+X3 = np.random.rand(100, 1) * 10
+y3 = 2 * X3.squeeze() + 1 + np.random.randn(100) * 15  # Lots of noise
+
+model3 = LinearRegression()
+model3.fit(X3, y3)
+y3_pred = model3.predict(X3)
+r2_3 = r2_score(y3, y3_pred)
+
+print(f"R² Score: {r2_3:.4f}")
+print(f"Interpretation: Model explains only {r2_3*100:.1f}% of the variation")
+print(f"This model has LIMITED predictive power")
+
+# Example 4: No Relationship (R² ≈ 0.00)
+print("\n" + "="*60)
+print("EXAMPLE 4: NO RELATIONSHIP")
+print("="*60)
+
+X4 = np.random.rand(100, 1) * 10
+y4 = np.random.randn(100) * 10  # Completely random, no relationship
+
+model4 = LinearRegression()
+model4.fit(X4, y4)
+y4_pred = model4.predict(X4)
+r2_4 = r2_score(y4, y4_pred)
+
+print(f"R² Score: {r2_4:.4f}")
+print(f"Interpretation: Model explains {max(0, r2_4)*100:.1f}% of the variation")
+print(f"X and Y are UNRELATED - model is useless!")
+
+# Visualization of all four scenarios
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Strong Relationship
+axes[0, 0].scatter(X1, y1, alpha=0.5, color='blue', label='Actual')
+axes[0, 0].plot(X1, y1_pred, color='red', linewidth=2, label='Predicted')
+axes[0, 0].set_title(f'Strong: R² = {r2_1:.3f}')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Moderate Relationship
+axes[0, 1].scatter(X2, y2, alpha=0.5, color='blue', label='Actual')
+axes[0, 1].plot(X2, y2_pred, color='red', linewidth=2, label='Predicted')
+axes[0, 1].set_title(f'Moderate: R² = {r2_2:.3f}')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Weak Relationship
+axes[1, 0].scatter(X3, y3, alpha=0.5, color='blue', label='Actual')
+axes[1, 0].plot(X3, y3_pred, color='red', linewidth=2, label='Predicted')
+axes[1, 0].set_title(f'Weak: R² = {r2_3:.3f}')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: No Relationship
+axes[1, 1].scatter(X4, y4, alpha=0.5, color='blue', label='Actual')
+axes[1, 1].plot(X4, y4_pred, color='red', linewidth=2, label='Predicted')
+axes[1, 1].set_title(f'None: R² = {r2_4:.3f}')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.suptitle('R² in Different Scenarios', fontsize=16, y=1.02)
+plt.tight_layout()
+plt.show()
+
+# Important Note about Negative R²
+print("\n" + "="*60)
+print("SPECIAL CASE: NEGATIVE R²")
+print("="*60)
+print("Can R² be negative? YES!")
+print("- In training: No (always between 0 and 1)")
+print("- In testing: Yes (if model is worse than mean)")
+print("- Interpretation: Your model is WORSE than just using the average!")
+print("- Common cause: Overfitting on training data")
+            </div>
+        </div>
+
+        <!-- Common Misconceptions -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">⚠️</span>
+                Common Misconceptions About R²
+            </h2>
+
+            <div class="concept-grid">
+                <div class="concept-card" style="background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: #ef4444;">
+                    <h4 style="color: #991b1b;">❌ Myth 1: Higher R² = Better Model</h4>
+                    <p><strong>Reality:</strong> You can artificially increase R² by adding more variables (even random ones!). This leads to overfitting.</p>
+                    <p style="margin-top: 10px; color: #666;">Always use Adjusted R² when comparing models with different numbers of features.</p>
+                </div>
+
+                <div class="concept-card" style="background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: #ef4444;">
+                    <h4 style="color: #991b1b;">❌ Myth 2: R² = 0.90 means 90% accurate predictions</h4>
+                    <p><strong>Reality:</strong> R² measures explained variance, not prediction accuracy. Your predictions could still have large errors!</p>
+                    <p style="margin-top: 10px; color: #666;">Also check RMSE or MAE for actual prediction errors.</p>
+                </div>
+
+                <div class="concept-card" style="background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: #ef4444;">
+                    <h4 style="color: #991b1b;">❌ Myth 3: Low R² means the model is useless</h4>
+                    <p><strong>Reality:</strong> In some fields (like stock prediction), even R² = 0.05 can be valuable if it gives a slight edge.</p>
+                    <p style="margin-top: 10px; color: #666;">Context matters more than the absolute value.</p>
+                </div>
+
+                <div class="concept-card" style="background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: #ef4444;">
+                    <h4 style="color: #991b1b;">❌ Myth 4: R² tells you if the model is correct</h4>
+                    <p><strong>Reality:</strong> R² only measures fit, not whether the relationship is real or causal.</p>
+                    <p style="margin-top: 10px; color: #666;">You could have high R² with a completely wrong model!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adjusted R-Squared -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">📐</span>
+                Adjusted R² - The Better Metric
+            </h2>
+
+            <div class="formula-box">
+                Adjusted R² = 1 - [(1 - R²) × (n - 1) / (n - p - 1)]
+                <br>
+                <span style="font-size: 0.8em;">where n = sample size, p = number of predictors</span>
+            </div>
+
+            <div class="intuition-box">
+                <h3 style="color: #166534; margin-bottom: 15px;">🎯 Why Adjusted R² is Better</h3>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li><strong>Penalizes unnecessary features:</strong> Adding useless variables decreases Adjusted R²</li>
+                    <li><strong>Fair comparison:</strong> Can compare models with different numbers of features</li>
+                    <li><strong>Prevents overfitting:</strong> Encourages simpler models</li>
+                    <li><strong>More realistic:</strong> Better estimate of true model performance</li>
+                </ul>
+            </div>
+
+            <div class="code-block">
+# Comparing R² vs Adjusted R²
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
+np.random.seed(42)
+n_samples = 100
+
+# True relationship: y = 2*x1 + 3*x2 + noise
+X_useful = np.random.randn(n_samples, 2)
+y = 2 * X_useful[:, 0] + 3 * X_useful[:, 1] + np.random.randn(n_samples) * 0.5
+
+# Model 1: Only useful features
+model1 = LinearRegression()
+model1.fit(X_useful, y)
+r2_1 = r2_score(y, model1.predict(X_useful))
+
+# Calculate Adjusted R²
+n = len(y)
+p = X_useful.shape[1]
+adj_r2_1 = 1 - (1 - r2_1) * (n - 1) / (n - p - 1)
+
+print("Model 1: Only Useful Features")
+print(f"Features: 2")
+print(f"R²:         {r2_1:.4f}")
+print(f"Adjusted R²: {adj_r2_1:.4f}")
+
+# Model 2: Add 5 random (useless) features
+X_random = np.random.randn(n_samples, 5)
+X_combined = np.hstack([X_useful, X_random])
+
+model2 = LinearRegression()
+model2.fit(X_combined, y)
+r2_2 = r2_score(y, model2.predict(X_combined))
+
+p2 = X_combined.shape[1]
+adj_r2_2 = 1 - (1 - r2_2) * (n - 1) / (n - p2 - 1)
+
+print("\nModel 2: Useful + 5 Random Features")
+print(f"Features: 7")
+print(f"R²:          {r2_2:.4f} (increased!)")
+print(f"Adjusted R²: {adj_r2_2:.4f} (decreased!)")
+
+print("\n🎯 Key Insight:")
+print("R² went UP (seems better) but Adjusted R² went DOWN (actually worse)!")
+print("The random features added no real value, just overfitting.")
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="card">
+            <h2 class="section-title">
+                <span class="icon-box">✅</span>
+                Key Takeaways
+            </h2>
+
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h4>1️⃣ R² = Explained Variance</h4>
+                    <p>Percentage of variation in Y explained by your model (0 to 1)</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>2️⃣ Context is Everything</h4>
+                    <p>Good R² varies by field: Physics (0.90+), Social Science (0.30+)</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>3️⃣ Not About Accuracy</h4>
+                    <p>R² ≠ prediction accuracy. Check RMSE/MAE for that</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>4️⃣ Can Be Misleading</h4>
+                    <p>Adding features always increases R². Use Adjusted R² instead</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>5️⃣ Can Be Negative</h4>
+                    <p>On test data, R² < 0 means model worse than using mean</p>
+                </div>
+                
+                <div class="concept-card">
+                    <h4>6️⃣ Not for Non-Linear</h4>
+                    <p>R² assumes linear relationship. Less meaningful for non-linear models</p>
+                </div>
+            </div>
+
+            <div class="intuition-box">
+                <h3 style="color: #166534; margin-bottom: 15px;">💭 Final Intuition</h3>
+                <p style="font-size: 1.1em; line-height: 1.8;">
+                    Think of R² like a test score: 90% is great, but the importance depends on the test. 
+                    A 30% on an impossible test might be amazing, while 90% on an easy test might be poor. 
+                    Always consider the context, check other metrics, and remember that explaining variance 
+                    is just one aspect of a good model.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
