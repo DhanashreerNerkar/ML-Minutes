@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervised vs Unsupervised Learning</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .learning-type {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .learning-type:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .supervised {
+            border-left: 5px solid #3498db;
+        }
+        .unsupervised {
+            border-left: 5px solid #e74c3c;
+        }
+        h2 {
+            color: #34495e;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        .key-point {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .example-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .real-world-example {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .data-visualization {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            background: white;
+        }
+        .data-table tr:hover td {
+            background: #f5f5f5;
+        }
+        .algorithm-box {
+            display: inline-block;
+            background: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .algorithm-box:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .process-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .process-step {
+            background: white;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            margin: 0 10px;
+        }
+        .interactive-demo {
+            background: #f0f3f7;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: scale(1.1);
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .highlight {
+            background: linear-gradient(135deg, #74b9ff 0%, #a29bfe 100%);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .pros {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .cons {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .use-case-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .use-case-card:hover {
+            transform: translateY(-5px);
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .decision-tree {
+            background: #e8f5e9;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px solid #4caf50;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animated {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Supervised vs Unsupervised Learning</h1>
+        <p class="subtitle">Master the Two Fundamental Approaches in Machine Learning</p>
+
+        <div class="comparison-grid">
+            <div class="learning-type supervised">
+                <div class="icon">📚</div>
+                <h2>Supervised Learning</h2>
+                <p><strong>Definition:</strong> Learning with a teacher! The algorithm learns from labeled training data.</p>
+                
+                <div class="key-point">
+                    <strong>🎯 Key Characteristic:</strong><br>
+                    We know the right answer during training
+                </div>
+                
+                <div class="key-point">
+                    <strong>📊 Input:</strong> Features + Labels<br>
+                    <strong>📈 Output:</strong> Predictions for new data
+                </div>
+            </div>
+
+            <div class="learning-type unsupervised">
+                <div class="icon">🔍</div>
+                <h2>Unsupervised Learning</h2>
+                <p><strong>Definition:</strong> Learning without a teacher! The algorithm finds hidden patterns in unlabeled data.</p>
+                
+                <div class="key-point">
+                    <strong>🎯 Key Characteristic:</strong><br>
+                    No right answers - discover structure
+                </div>
+                
+                <div class="key-point">
+                    <strong>📊 Input:</strong> Features only (no labels)<br>
+                    <strong>📈 Output:</strong> Patterns, groups, or representations
+                </div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; margin-top: 50px; color: #667eea;">📝 Real-World Examples Comparison</h2>
+        
+        <div class="example-card">
+            <h3>🏠 House Price Prediction (Supervised)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>House Features</th>
+                        <th>Location</th>
+                        <th>Size (sq ft)</th>
+                        <th>Bedrooms</th>
+                        <th>Label (Price)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>House A</td>
+                        <td>Downtown</td>
+                        <td>2,000</td>
+                        <td>3</td>
+                        <td class="highlight">$500,000</td>
+                    </tr>
+                    <tr>
+                        <td>House B</td>
+                        <td>Suburbs</td>
+                        <td>1,500</td>
+                        <td>2</td>
+                        <td class="highlight">$350,000</td>
+                    </tr>
+                    <tr>
+                        <td>House C</td>
+                        <td>Downtown</td>
+                        <td>2,500</td>
+                        <td>4</td>
+                        <td class="highlight">$650,000</td>
+                    </tr>
+                    <tr>
+                        <td>New House</td>
+                        <td>Suburbs</td>
+                        <td>1,800</td>
+                        <td>3</td>
+                        <td style="color: red;">? (Predict this)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>✅ <strong>Process:</strong> Train on houses with known prices → Predict prices for new houses</p>
+        </div>
+
+        <div class="example-card">
+            <h3>🛒 Customer Segmentation (Unsupervised)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Age</th>
+                        <th>Annual Spend</th>
+                        <th>Visit Frequency</th>
+                        <th>Label</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Customer 1</td>
+                        <td>25</td>
+                        <td>$2,000</td>
+                        <td>Weekly</td>
+                        <td style="color: red;">No Label!</td>
+                    </tr>
+                    <tr>
+                        <td>Customer 2</td>
+                        <td>45</td>
+                        <td>$8,000</td>
+                        <td>Monthly</td>
+                        <td style="color: red;">No Label!</td>
+                    </tr>
+                    <tr>
+                        <td>Customer 3</td>
+                        <td>28</td>
+                        <td>$2,500</td>
+                        <td>Weekly</td>
+                        <td style="color: red;">No Label!</td>
+                    </tr>
+                    <tr>
+                        <td>Customer 4</td>
+                        <td>50</td>
+                        <td>$9,000</td>
+                        <td>Monthly</td>
+                        <td style="color: red;">No Label!</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>✅ <strong>Process:</strong> Algorithm discovers: Group 1 (Young, frequent shoppers) & Group 2 (Older, high spenders)</p>
+        </div>
+
+        <h2 style="text-align: center; margin-top: 50px; color: #667eea;">🔄 How Each Approach Works</h2>
+
+        <div class="process-flow">
+            <h3 style="width: 100%; text-align: center;">Supervised Learning Pipeline</h3>
+            <div class="process-step" style="background: #e3f2fd;">📁 Training Data<br>(with labels)</div>
+            <span class="arrow">→</span>
+            <div class="process-step" style="background: #fff3e0;">🤖 Train Model<br>(learn patterns)</div>
+            <span class="arrow">→</span>
+            <div class="process-step" style="background: #e8f5e9;">✅ Validate<br>(check accuracy)</div>
+            <span class="arrow">→</span>
+            <div class="process-step" style="background: #fce4ec;">🎯 Predict<br>(new data)</div>
+        </div>
+
+        <div class="process-flow">
+            <h3 style="width: 100%; text-align: center;">Unsupervised Learning Pipeline</h3>
+            <div class="process-step" style="background: #e3f2fd;">📁 Raw Data<br>(no labels)</div>
+            <span class="arrow">→</span>
+            <div class="process-step" style="background: #fff3e0;">🔍 Find Patterns<br>(clustering/reduction)</div>
+            <span class="arrow">→</span>
+            <div class="process-step" style="background: #e8f5e9;">📊 Analyze<br>(interpret results)</div>
+            <span class="arrow">→</span>
+            <div class="process-step" style="background: #fce4ec;">💡 Insights<br>(business value)</div>
+        </div>
+
+        <h2 style="text-align: center; margin-top: 50px; color: #667eea;">🏭 Industry Applications</h2>
+
+        <div class="use-case-grid">
+            <div class="use-case-card">
+                <h3>📧 Email Classification</h3>
+                <p><strong>Type:</strong> Supervised</p>
+                <p>Spam vs Not Spam</p>
+                <p>Trained on labeled emails</p>
+            </div>
+            <div class="use-case-card">
+                <h3>🎬 Netflix Recommendations</h3>
+                <p><strong>Type:</strong> Unsupervised</p>
+                <p>Group similar users/movies</p>
+                <p>No explicit labels needed</p>
+            </div>
+            <div class="use-case-card">
+                <h3>🏥 Disease Diagnosis</h3>
+                <p><strong>Type:</strong> Supervised</p>
+                <p>Predict disease from symptoms</p>
+                <p>Trained on diagnosed cases</p>
+            </div>
+            <div class="use-case-card">
+                <h3>🛡️ Fraud Detection</h3>
+                <p><strong>Type:</strong> Both!</p>
+                <p>Supervised: Known fraud patterns</p>
+                <p>Unsupervised: Detect anomalies</p>
+            </div>
+            <div class="use-case-card">
+                <h3>🗣️ Voice Assistants</h3>
+                <p><strong>Type:</strong> Supervised</p>
+                <p>Speech → Text conversion</p>
+                <p>Trained on transcribed audio</p>
+            </div>
+            <div class="use-case-card">
+                <h3>🧬 Gene Analysis</h3>
+                <p><strong>Type:</strong> Unsupervised</p>
+                <p>Discover gene clusters</p>
+                <p>Find unknown patterns</p>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; margin-top: 50px; color: #667eea;">🎯 Common Algorithms</h2>
+
+        <div class="comparison-grid">
+            <div class="learning-type supervised">
+                <h3>Supervised Algorithms</h3>
+                <div style="margin-top: 20px;">
+                    <div class="algorithm-box">📈 Linear Regression</div>
+                    <div class="algorithm-box">📊 Logistic Regression</div>
+                    <div class="algorithm-box">🌲 Decision Trees</div>
+                    <div class="algorithm-box">🌳 Random Forest</div>
+                    <div class="algorithm-box">🧠 Neural Networks</div>
+                    <div class="algorithm-box">📏 SVM</div>
+                    <div class="algorithm-box">🎯 k-NN</div>
+                    <div class="algorithm-box">📉 Naive Bayes</div>
+                </div>
+            </div>
+            <div class="learning-type unsupervised">
+                <h3>Unsupervised Algorithms</h3>
+                <div style="margin-top: 20px;">
+                    <div class="algorithm-box">🔵 K-Means Clustering</div>
+                    <div class="algorithm-box">🔶 DBSCAN</div>
+                    <div class="algorithm-box">🎯 Hierarchical Clustering</div>
+                    <div class="algorithm-box">📉 PCA</div>
+                    <div class="algorithm-box">🎨 Autoencoders</div>
+                    <div class="algorithm-box">🗺️ t-SNE</div>
+                    <div class="algorithm-box">🎭 GANs</div>
+                    <div class="algorithm-box">📊 Apriori</div>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; margin-top: 50px; color: #667eea;">⚖️ Pros and Cons</h2>
+
+        <div class="comparison-grid">
+            <div>
+                <h3 style="text-align: center;">Supervised Learning</h3>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Pros</h4>
+                        <ul>
+                            <li>Clear performance metrics</li>
+                            <li>Predictable outputs</li>
+                            <li>Well-defined objectives</li>
+                            <li>Easy to evaluate</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>❌ Cons</h4>
+                        <ul>
+                            <li>Needs labeled data (expensive)</li>
+                            <li>Can overfit to training data</li>
+                            <li>Limited to known patterns</li>
+                            <li>Biased by labels</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h3 style="text-align: center;">Unsupervised Learning</h3>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Pros</h4>
+                        <ul>
+                            <li>No labeling required</li>
+                            <li>Discovers hidden patterns</li>
+                            <li>Works with raw data</li>
+                            <li>Finds unknown insights</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>❌ Cons</h4>
+                        <ul>
+                            <li>Hard to evaluate results</li>
+                            <li>Unpredictable outputs</li>
+                            <li>Requires interpretation</li>
+                            <li>No clear right answer</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; margin-top: 50px; color: #667eea;">💻 Code Examples</h2>
+
+        <div class="example-card">
+            <h3>Python: Supervised Learning (House Prices)</h3>
+            <div class="code-block">
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+# Supervised: We have both features (X) and labels (y)
+X = [[2000, 3], [1500, 2], [2500, 4], [1800, 3]]  # [size, bedrooms]
+y = [500000, 350000, 650000, 425000]  # Known prices (LABELS!)
+
+# Split data into training and testing
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Train the model with labeled data
+model = LinearRegression()
+model.fit(X_train, y_train)  # Learning from examples
+
+# Predict on new house
+new_house = [[2200, 3]]
+predicted_price = model.predict(new_house)
+print(f"Predicted price: ${predicted_price[0]:,.0f}")
+            </div>
+        </div>
+
+        <div class="example-card">
+            <h3>Python: Unsupervised Learning (Customer Clustering)</h3>
+            <div class="code-block">
+from sklearn.cluster import KMeans
+import numpy as np
+
+# Unsupervised: We only have features, NO LABELS!
+customers = np.array([
+    [25, 2000, 52],   # [age, annual_spend, visits_per_year]
+    [45, 8000, 12],
+    [28, 2500, 48],
+    [50, 9000, 10],
+    [30, 3000, 45],
+    [48, 7500, 15]
+])
+# Notice: No y labels! We don't know the "right" grouping
+
+# Let the algorithm find patterns
+kmeans = KMeans(n_clusters=2)
+kmeans.fit(customers)  # Finding hidden structure
+
+# See which cluster each customer belongs to
+clusters = kmeans.predict(customers)
+print(f"Customer groupings discovered: {clusters}")
+# Output might be: [0, 1, 0, 1, 0, 1] 
+# (Young frequent shoppers vs Older high spenders)
+            </div>
+        </div>
+
+        <div class="decision-tree">
+            <h2 style="text-align: center;">🤔 Which One Should You Use?</h2>
+            <div style="text-align: center; margin-top: 30px;">
+                <h3>Ask yourself these questions:</h3>
+                <div style="margin-top: 20px; font-size: 1.1em;">
+                    <p><strong>1️⃣ Do you have labeled data?</strong></p>
+                    <p>Yes → Consider Supervised | No → Use Unsupervised</p>
+                    
+                    <p style="margin-top: 15px;"><strong>2️⃣ What's your goal?</strong></p>
+                    <p>Predict specific values → Supervised | Find patterns → Unsupervised</p>
+                    
+                    <p style="margin-top: 15px;"><strong>3️⃣ Do you know what you're looking for?</strong></p>
+                    <p>Yes → Supervised | No, exploring → Unsupervised</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-demo">
+            <h2>🎮 Interactive Visualization</h2>
+            <p>See how each type of learning works with data!</p>
+            <button onclick="showSupervised()">Show Supervised Example</button>
+            <button onclick="showUnsupervised()">Show Unsupervised Example</button>
+            
+            <div class="chart-container">
+                <canvas id="mlChart"></canvas>
+            </div>
+            <div id="explanation" style="margin-top: 20px; font-size: 1.1em;"></div>
+        </div>
+
+        <div class="example-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h2 style="text-align: center;">🎓 Key Takeaways</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+                <div>
+                    <h3>Supervised = Teaching with Examples</h3>
+                    <ul>
+                        <li>Like teaching a child with flashcards</li>
+                        <li>Show examples with correct answers</li>
+                        <li>Test on new, similar problems</li>
+                        <li>Measure success by accuracy</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Unsupervised = Self-Discovery</h3>
+                    <ul>
+                        <li>Like organizing a messy room</li>
+                        <li>Group similar things together</li>
+                        <li>No "right" way to organize</li>
+                        <li>Success = useful patterns found</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="real-world-example">
+            <h2>🌍 Combined Real-World Example: Amazon's Recommendation System</h2>
+            <p><strong>They use BOTH types of learning!</strong></p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <h3>Supervised Component</h3>
+                    <p>Predicts if you'll buy a product based on:</p>
+                    <ul>
+                        <li>Past purchases (labeled: bought/not bought)</li>
+                        <li>Product ratings you gave</li>
+                        <li>Items in cart</li>
+                    </ul>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <h3>Unsupervised Component</h3>
+                    <p>Groups similar products and users:</p>
+                    <ul>
+                        <li>Clusters products by features</li>
+                        <li>Groups users with similar tastes</li>
+                        <li>Finds buying patterns</li>
+                    </ul>
+                </div>
+            </div>
+            <p style="margin-top: 20px; text-align: center;"><strong>Result:</strong> "Customers who bought this also bought..." (Unsupervised) + "Recommended for you" (Supervised)</p>
+        </div>
+    </div>
+
+    <script>
+        let chart;
+        const ctx = document.getElementById('mlChart').getContext('2d');
+
+        function initChart() {
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Machine Learning Visualization'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Feature 1'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Feature 2'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showSupervised() {
+            // Supervised learning data with labels
+            const class1 = Array.from({length: 20}, () => ({
+                x: Math.random() * 3 + 1,
+                y: Math.random() * 3 + 1
+            }));
+            
+            const class2 = Array.from({length: 20}, () => ({
+                x: Math.random() * 3 + 5,
+                y: Math.random() * 3 + 5
+            }));
+
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Class A (Labeled)',
+                            data: class1,
+                            backgroundColor: '#3498db',
+                            pointRadius: 8
+                        },
+                        {
+                            label: 'Class B (Labeled)',
+                            data: class2,
+                            backgroundColor: '#e74c3c',
+                            pointRadius: 8
+                        },
+                        {
+                            label: 'Decision Boundary',
+                            data: [{x: 0, y: 8}, {x: 8, y: 0}],
+                            type: 'line',
+                            borderColor: '#2ecc71',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Supervised Learning: Classification with Labels',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        x: { min: 0, max: 9 },
+                        y: { min: 0, max: 9 }
+                    }
+                }
+            });
+
+            document.getElementById('explanation').innerHTML = `
+                <strong>Supervised Learning Visualization:</strong><br>
+                • Blue dots = Class A (e.g., "Spam")<br>
+                • Red dots = Class B (e.g., "Not Spam")<br>
+                • Green line = Decision boundary learned from labeled data<br>
+                • The model learned to separate classes based on training examples!
+            `;
+        }
+
+        function showUnsupervised() {
+            // Unsupervised learning data without labels
+            const data = Array.from({length: 60}, () => {
+                const cluster = Math.random() < 0.33 ? 0 : Math.random() < 0.66 ? 1 : 2;
+                const centers = [[2, 2], [6, 2], [4, 6]];
+                return {
+                    x: centers[cluster][0] + (Math.random() - 0.5) * 2,
+                    y: centers[cluster][1] + (Math.random() - 0.5) * 2
+                };
+            });
+
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Unlabeled Data',
+                        data: data,
+                        backgroundColor: '#95a5a6',
+                        pointRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Unsupervised Learning: Data Without Labels',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        x: { min: 0, max: 8 },
+                        y: { min: 0, max: 8 }
+                    }
+                }
+            });
+
+            // Simulate clustering after 2 seconds
+            setTimeout(() => {
+                const clustered = data.map(point => {
+                    const centers = [[2, 2], [6, 2], [4, 6]];
+                    const distances = centers.map(c => 
+                        Math.sqrt(Math.pow(point.x - c[0], 2) + Math.pow(point.y - c[1], 2))
+                    );
+                    return distances.indexOf(Math.min(...distances));
+                });
+
+                chart.data.datasets = [
+                    {
+                        label: 'Cluster 1',
+                        data: data.filter((_, i) => clustered[i] === 0),
+                        backgroundColor: '#e74c3c',
+                        pointRadius: 8
+                    },
+                    {
+                        label: 'Cluster 2',
+                        data: data.filter((_, i) => clustered[i] === 1),
+                        backgroundColor: '#3498db',
+                        pointRadius: 8
+                    },
+                    {
+                        label: 'Cluster 3',
+                        data: data.filter((_, i) => clustered[i] === 2),
+                        backgroundColor: '#f39c12',
+                        pointRadius: 8
+                    }
+                ];
+                chart.options.plugins.title.text = 'Unsupervised Learning: Clusters Discovered!';
+                chart.update();
+
+                document.getElementById('explanation').innerHTML = `
+                    <strong>Unsupervised Learning Visualization:</strong><br>
+                    • Started with gray dots (no labels)<br>
+                    • Algorithm discovered 3 natural groups<br>
+                    • Colors show the clusters found by the algorithm<br>
+                    • No labels needed - patterns emerged from data structure!
+                `;
+            }, 2000);
+
+            document.getElementById('explanation').innerHTML = `
+                <strong>Processing...</strong> Watch as the algorithm discovers patterns without any labels!
+            `;
+        }
+
+        // Initialize with supervised example
+        initChart();
+        showSupervised();
+    </script>
+</body>
+</html>
