@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handling Imbalanced Datasets</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        .problem-visualization {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .imbalance-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+        }
+        .class-representation {
+            text-align: center;
+            padding: 20px;
+        }
+        .data-point {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin: 2px;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .data-point:hover {
+            transform: scale(1.5);
+        }
+        .majority-point {
+            background: #3498db;
+        }
+        .minority-point {
+            background: #e74c3c;
+        }
+        .technique-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s;
+        }
+        .technique-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .interactive-section {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: scale(1.1);
+        }
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px auto;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .good-metric {
+            color: #27ae60;
+        }
+        .bad-metric {
+            color: #e74c3c;
+        }
+        .warning-metric {
+            color: #f39c12;
+        }
+        .confusion-matrix {
+            display: grid;
+            grid-template-columns: 120px 120px 120px;
+            gap: 10px;
+            margin: 30px auto;
+            width: fit-content;
+        }
+        .matrix-cell {
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            font-weight: bold;
+            color: white;
+        }
+        .matrix-header {
+            background: #667eea;
+        }
+        .tp {
+            background: #27ae60;
+        }
+        .tn {
+            background: #3498db;
+        }
+        .fp {
+            background: #f39c12;
+        }
+        .fn {
+            background: #e74c3c;
+        }
+        .real-world-example {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            background: white;
+        }
+        .comparison-table tr:hover td {
+            background: #f5f6fa;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #74b9ff 0%, #a29bfe 100%);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .success-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .danger-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .resampling-visual {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        .sample-container {
+            text-align: center;
+            padding: 20px;
+        }
+        .technique-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .pros {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+        .cons {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #dc3545;
+        }
+        .decision-tree {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .slider-container {
+            margin: 20px auto;
+            max-width: 500px;
+        }
+        .slider {
+            width: 100%;
+            height: 40px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #e74c3c 0%, #3498db 100%);
+            border-radius: 20px;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            background: white;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .animated-point {
+            animation: pulse 1s infinite;
+        }
+        .best-practice {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .ratio-display {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .strategy-flowchart {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚖️ Handling Imbalanced Datasets</h1>
+        <p class="subtitle">Mastering Classification When Classes Are Unequal</p>
+
+        <div class="problem-visualization">
+            <h2 style="color: #667eea; text-align: center;">🔍 The Imbalanced Dataset Problem</h2>
+            <div class="imbalance-demo">
+                <div class="class-representation">
+                    <h3 style="color: #3498db;">Majority Class (95%)</h3>
+                    <div id="majorityClass"></div>
+                    <p style="margin-top: 10px;">Normal Transactions</p>
+                </div>
+                <div class="class-representation">
+                    <h3 style="color: #e74c3c;">Minority Class (5%)</h3>
+                    <div id="minorityClass"></div>
+                    <p style="margin-top: 10px;">Fraudulent Transactions</p>
+                </div>
+            </div>
+            <div class="ratio-display" id="ratioDisplay">Imbalance Ratio: 19:1</div>
+        </div>
+
+        <div class="danger-box">
+            <h3>⚠️ Why is Imbalance a Problem?</h3>
+            <p>A model can achieve 95% accuracy by simply predicting "normal" for everything!</p>
+            <ul style="margin-top: 15px;">
+                <li>🎯 <strong>Accuracy Paradox:</strong> High accuracy but useless model</li>
+                <li>😴 <strong>Lazy Learning:</strong> Model ignores minority class</li>
+                <li>💔 <strong>Critical Misses:</strong> Fails to detect rare but important events</li>
+                <li>📊 <strong>Biased Predictions:</strong> Always favors majority class</li>
+            </ul>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">🛠️ Techniques to Handle Imbalance</h2>
+
+        <div class="technique-card">
+            <h3>1️⃣ Resampling Techniques</h3>
+            <div class="resampling-visual">
+                <div class="sample-container">
+                    <h4>Original</h4>
+                    <div class="chart-container" style="max-width: 200px;">
+                        <canvas id="originalChart"></canvas>
+                    </div>
+                    <p>Majority: 950<br>Minority: 50</p>
+                </div>
+                <div class="sample-container">
+                    <h4>Oversampling</h4>
+                    <div class="chart-container" style="max-width: 200px;">
+                        <canvas id="oversampleChart"></canvas>
+                    </div>
+                    <p>Majority: 950<br>Minority: 950 ↑</p>
+                </div>
+                <div class="sample-container">
+                    <h4>Undersampling</h4>
+                    <div class="chart-container" style="max-width: 200px;">
+                        <canvas id="undersampleChart"></canvas>
+                    </div>
+                    <p>Majority: 50 ↓<br>Minority: 50</p>
+                </div>
+            </div>
+            
+            <div class="technique-comparison">
+                <div>
+                    <h4>📈 Oversampling (SMOTE)</h4>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>Pros:</strong>
+                            <ul>
+                                <li>No information loss</li>
+                                <li>Creates synthetic samples</li>
+                                <li>Better for small datasets</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <strong>Cons:</strong>
+                            <ul>
+                                <li>Can cause overfitting</li>
+                                <li>Longer training time</li>
+                                <li>Synthetic data may not be realistic</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4>📉 Undersampling</h4>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <strong>Pros:</strong>
+                            <ul>
+                                <li>Faster training</li>
+                                <li>No overfitting from duplicates</li>
+                                <li>Works well with large datasets</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <strong>Cons:</strong>
+                            <ul>
+                                <li>Loses information</li>
+                                <li>May miss important patterns</li>
+                                <li>Not good for small datasets</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-section">
+            <h2>🎮 Interactive Demo: See Resampling Effects</h2>
+            <p>Adjust the imbalance ratio and see how different techniques perform</p>
+            
+            <div class="slider-container">
+                <label><strong>Minority Class Percentage:</strong> <span id="minorityPercent">5%</span></label>
+                <input type="range" class="slider" id="imbalanceSlider" min="1" max="50" value="5">
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <button onclick="applyNoResampling()">No Resampling</button>
+                <button onclick="applyOversampling()">Apply SMOTE</button>
+                <button onclick="applyUndersampling()">Apply Undersampling</button>
+                <button onclick="applyClassWeights()">Apply Class Weights</button>
+            </div>
+            
+            <div class="metrics-grid" id="metricsDisplay">
+                <div class="metric-card">
+                    <div>Accuracy</div>
+                    <div class="metric-value bad-metric" id="accuracy">95.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div>Precision</div>
+                    <div class="metric-value warning-metric" id="precision">60.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div>Recall</div>
+                    <div class="metric-value bad-metric" id="recall">10.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div>F1-Score</div>
+                    <div class="metric-value bad-metric" id="f1score">0.17</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="technique-card">
+            <h3>2️⃣ SMOTE (Synthetic Minority Over-sampling Technique)</h3>
+            <p>Creates synthetic examples rather than just duplicating minority samples</p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                <h4>How SMOTE Works:</h4>
+                <ol style="line-height: 2;">
+                    <li>For each minority sample, find k nearest neighbors</li>
+                    <li>Randomly select one neighbor</li>
+                    <li>Create synthetic sample along the line between original and neighbor</li>
+                    <li>Repeat until desired balance achieved</li>
+                </ol>
+            </div>
+            
+            <div class="code-block">
+<pre>from imblearn.over_sampling import SMOTE
+
+# Apply SMOTE
+smote = SMOTE(sampling_strategy='auto', k_neighbors=5)
+X_resampled, y_resampled = smote.fit_resample(X_train, y_train)
+
+print(f"Before SMOTE: {Counter(y_train)}")
+print(f"After SMOTE: {Counter(y_resampled)}")
+# Before: {0: 950, 1: 50}
+# After: {0: 950, 1: 950}</pre>
+            </div>
+        </div>
+
+        <div class="technique-card">
+            <h3>3️⃣ Class Weight Adjustment</h3>
+            <p>Tell the model to pay more attention to minority class during training</p>
+            
+            <div class="code-block">
+<pre># Method 1: Automatic class weight balancing
+from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier(
+    class_weight='balanced'  # Automatically adjusts weights
+)
+
+# Method 2: Manual weight specification
+model = RandomForestClassifier(
+    class_weight={0: 1, 1: 20}  # 20x weight for minority class
+)
+
+# Method 3: Compute weights based on frequency
+from sklearn.utils.class_weight import compute_class_weight
+
+weights = compute_class_weight(
+    'balanced',
+    classes=np.unique(y_train),
+    y=y_train
+)
+class_weights = dict(zip(np.unique(y_train), weights))</pre>
+            </div>
+            
+            <div class="pros-cons">
+                <div class="pros">
+                    <strong>✅ Advantages:</strong>
+                    <ul>
+                        <li>No data manipulation needed</li>
+                        <li>Fast and simple</li>
+                        <li>No risk of overfitting from duplicates</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <strong>❌ Limitations:</strong>
+                    <ul>
+                        <li>Not all algorithms support class weights</li>
+                        <li>May need tuning for optimal weights</li>
+                        <li>Less effective for extreme imbalance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="technique-card">
+            <h3>4️⃣ Anomaly Detection Approach</h3>
+            <p>Treat minority class as anomalies/outliers</p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                <h4>When to Use:</h4>
+                <ul>
+                    <li>Extreme imbalance (< 1% minority)</li>
+                    <li>Fraud detection, network intrusion</li>
+                    <li>When minority class is truly "abnormal"</li>
+                </ul>
+            </div>
+            
+            <div class="code-block">
+<pre>from sklearn.ensemble import IsolationForest
+
+# Train only on majority class (normal data)
+normal_data = X_train[y_train == 0]
+
+# Anomaly detection model
+iso_forest = IsolationForest(
+    contamination=0.05,  # Expected proportion of outliers
+    random_state=42
+)
+iso_forest.fit(normal_data)
+
+# Predict: 1 for normal, -1 for anomaly
+predictions = iso_forest.predict(X_test)
+predictions = (predictions == -1).astype(int)  # Convert to 0/1</pre>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">📊 Proper Evaluation Metrics for Imbalanced Data</h2>
+
+        <div class="warning-box">
+            <h3>⚠️ Don't Use Accuracy Alone!</h3>
+            <p>With 99% majority class, a model predicting always "majority" gets 99% accuracy but 0% recall for minority!</p>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="technique-card">
+                <h3>Precision</h3>
+                <div style="font-size: 1.2em; margin: 15px 0;">
+                    TP / (TP + FP)
+                </div>
+                <p>"Of all positive predictions, how many were correct?"</p>
+                <p><strong>Use when:</strong> False positives are costly</p>
+            </div>
+            
+            <div class="technique-card">
+                <h3>Recall (Sensitivity)</h3>
+                <div style="font-size: 1.2em; margin: 15px 0;">
+                    TP / (TP + FN)
+                </div>
+                <p>"Of all actual positives, how many did we catch?"</p>
+                <p><strong>Use when:</strong> Missing positives is costly</p>
+            </div>
+            
+            <div class="technique-card">
+                <h3>F1-Score</h3>
+                <div style="font-size: 1.2em; margin: 15px 0;">
+                    2 × (Precision × Recall) / (Precision + Recall)
+                </div>
+                <p>Harmonic mean of precision and recall</p>
+                <p><strong>Use when:</strong> Need balance between precision and recall</p>
+            </div>
+            
+            <div class="technique-card">
+                <h3>ROC-AUC</h3>
+                <div style="font-size: 1.2em; margin: 15px 0;">
+                    Area Under ROC Curve
+                </div>
+                <p>Measures ranking ability across thresholds</p>
+                <p><strong>Caution:</strong> Can be misleading for extreme imbalance</p>
+            </div>
+            
+            <div class="technique-card">
+                <h3>PR-AUC</h3>
+                <div style="font-size: 1.2em; margin: 15px 0;">
+                    Area Under Precision-Recall Curve
+                </div>
+                <p>Better than ROC-AUC for imbalanced data</p>
+                <p><strong>Use when:</strong> Positive class is rare</p>
+            </div>
+            
+            <div class="technique-card">
+                <h3>Matthews Correlation</h3>
+                <div style="font-size: 1.2em; margin: 15px 0;">
+                    MCC ∈ [-1, 1]
+                </div>
+                <p>Considers all confusion matrix cells</p>
+                <p><strong>Use when:</strong> Need single balanced metric</p>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">🏥 Real-World Examples</h2>
+
+        <div class="real-world-example">
+            <h3>💳 Credit Card Fraud Detection</h3>
+            <p><strong>Imbalance:</strong> 0.17% fraudulent transactions</p>
+            <p><strong>Challenge:</strong> Missing fraud costs money, but blocking legitimate transactions annoys customers</p>
+            
+            <table class="comparison-table" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Approach</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>Business Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>No handling (baseline)</td>
+                        <td>88%</td>
+                        <td>12%</td>
+                        <td>Misses 88% of fraud ❌</td>
+                    </tr>
+                    <tr>
+                        <td>SMOTE</td>
+                        <td>75%</td>
+                        <td>85%</td>
+                        <td>Good fraud catch, some false alarms ✅</td>
+                    </tr>
+                    <tr>
+                        <td>Class Weights</td>
+                        <td>70%</td>
+                        <td>82%</td>
+                        <td>Balanced approach ✅</td>
+                    </tr>
+                    <tr>
+                        <td>Anomaly Detection</td>
+                        <td>65%</td>
+                        <td>92%</td>
+                        <td>Catches most fraud, more false positives ⚠️</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="real-world-example">
+            <h3>🏥 Rare Disease Diagnosis</h3>
+            <p><strong>Imbalance:</strong> 0.1% positive cases</p>
+            <p><strong>Priority:</strong> Cannot miss positive cases (high recall needed)</p>
+            
+            <div class="success-box" style="margin-top: 20px;">
+                <h4>Solution: Ensemble Approach</h4>
+                <ol>
+                    <li>Use SMOTE to create balanced training set</li>
+                    <li>Apply high class weight to positive class (1:100)</li>
+                    <li>Use ensemble of models with different thresholds</li>
+                    <li>Optimize for recall > 95% while maintaining precision > 30%</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Result:</strong> 97% recall, 35% precision - catches almost all cases with acceptable false positive rate</p>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">🎯 Complete Implementation Example</h2>
+
+        <div class="code-block">
+<pre># Complete Pipeline for Imbalanced Data
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline
+from collections import Counter
+
+# 1. Load and explore imbalance
+X, y = load_data()  # Your data
+print(f"Class distribution: {Counter(y)}")
+print(f"Imbalance ratio: {Counter(y)[0] / Counter(y)[1]:.1f}:1")
+
+# 2. Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+# 3. Method 1: SMOTE + Classification
+pipeline_smote = Pipeline([
+    ('smote', SMOTE(random_state=42)),
+    ('classifier', RandomForestClassifier(random_state=42))
+])
+
+# 4. Method 2: Class Weights
+model_weighted = RandomForestClassifier(
+    class_weight='balanced',
+    random_state=42
+)
+
+# 5. Method 3: Ensemble with different sampling
+from imblearn.ensemble import BalancedRandomForestClassifier
+model_balanced = BalancedRandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+# 6. Train and evaluate all approaches
+models = {
+    'SMOTE': pipeline_smote,
+    'Class Weights': model_weighted,
+    'Balanced Forest': model_balanced
+}
+
+results = {}
+for name, model in models.items():
+    # Train
+    model.fit(X_train, y_train)
+    
+    # Predict
+    y_pred = model.predict(X_test)
+    
+    # Evaluate
+    report = classification_report(y_test, y_pred, output_dict=True)
+    results[name] = {
+        'precision': report['1']['precision'],
+        'recall': report['1']['recall'],
+        'f1': report['1']['f1-score']
+    }
+    
+    print(f"\n{name} Results:")
+    print(f"Precision: {results[name]['precision']:.3f}")
+    print(f"Recall: {results[name]['recall']:.3f}")
+    print(f"F1-Score: {results[name]['f1']:.3f}")
+
+# 7. Choose best model based on your priority
+# If recall is critical (medical diagnosis):
+best_for_recall = max(results.items(), key=lambda x: x[1]['recall'])
+# If precision is critical (spam detection):
+best_for_precision = max(results.items(), key=lambda x: x[1]['precision'])
+# If balance is needed:
+best_for_f1 = max(results.items(), key=lambda x: x[1]['f1'])</pre>
+        </div>
+
+        <div class="decision-tree">
+            <h2 style="text-align: center;">🤔 Which Technique to Choose?</h2>
+            
+            <div class="strategy-flowchart">
+                <h3>Decision Framework:</h3>
+                <div style="margin-top: 30px; font-size: 1.1em; line-height: 2;">
+                    <p><strong>1. How imbalanced is your data?</strong></p>
+                    <p>• 90:10 → Class weights often sufficient</p>
+                    <p>• 99:1 → SMOTE or undersampling needed</p>
+                    <p>• 999:1 → Consider anomaly detection</p>
+                    
+                    <p style="margin-top: 20px;"><strong>2. How much data do you have?</strong></p>
+                    <p>• Small dataset → Oversampling (SMOTE)</p>
+                    <p>• Large dataset → Undersampling or class weights</p>
+                    
+                    <p style="margin-top: 20px;"><strong>3. What's your priority?</strong></p>
+                    <p>• High recall (catch all positives) → Aggressive oversampling + low threshold</p>
+                    <p>• High precision (avoid false alarms) → Conservative approach + high threshold</p>
+                    <p>• Balance → SMOTE + class weights + threshold tuning</p>
+                    
+                    <p style="margin-top: 20px;"><strong>4. Computational constraints?</strong></p>
+                    <p>• Fast training needed → Class weights</p>
+                    <p>• Can afford longer training → SMOTE or ensemble methods</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="best-practice">
+            <h2 style="text-align: center;">✨ Best Practices for Imbalanced Data</h2>
+            <ol style="line-height: 2; margin-top: 20px;">
+                <li>📊 <strong>Always check class distribution first</strong></li>
+                <li>🎯 <strong>Define success metrics based on business needs</strong> (not just accuracy)</li>
+                <li>📈 <strong>Use stratified splits</strong> to maintain class ratio</li>
+                <li>🔄 <strong>Try multiple techniques</strong> and compare</li>
+                <li>⚖️ <strong>Consider the cost</strong> of false positives vs false negatives</li>
+                <li>📉 <strong>Plot learning curves</strong> to detect overfitting</li>
+                <li>🎚️ <strong>Tune decision threshold</strong> based on precision-recall trade-off</li>
+                <li>🤝 <strong>Combine techniques</strong> (e.g., SMOTE + class weights)</li>
+                <li>📋 <strong>Report multiple metrics</strong>, not just one</li>
+                <li>🔬 <strong>Validate on truly unseen data</strong> with original distribution</li>
+            </ol>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Common Mistakes to Avoid</h3>
+            <ul style="line-height: 1.8;">
+                <li>❌ Using accuracy as the only metric</li>
+                <li>❌ Applying SMOTE before train-test split (causes data leakage)</li>
+                <li>❌ Not preserving original test set distribution</li>
+                <li>❌ Ignoring business context when choosing metrics</li>
+                <li>❌ Over-relying on one technique without comparison</li>
+            </ul>
+        </div>
+
+        <div class="success-box">
+            <h3>✅ Quick Wins for Imbalanced Data</h3>
+            <ul style="line-height: 1.8;">
+                <li>Start with <span class="highlight">class_weight='balanced'</span> as baseline</li>
+                <li>Use <span class="highlight">StratifiedKFold</span> for cross-validation</li>
+                <li>Monitor <span class="highlight">precision, recall, and F1</span> together</li>
+                <li>Try <span class="highlight">ensemble methods</span> like BalancedRandomForest</li>
+                <li>Adjust <span class="highlight">decision threshold</span> for final predictions</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Generate class visualization
+        function generateClassPoints() {
+            const majorityContainer = document.getElementById('majorityClass');
+            const minorityContainer = document.getElementById('minorityClass');
+            
+            // Clear previous points
+            majorityContainer.innerHTML = '';
+            minorityContainer.innerHTML = '';
+            
+            // Generate majority class points (95)
+            for (let i = 0; i < 95; i++) {
+                const point = document.createElement('span');
+                point.className = 'data-point majority-point';
+                majorityContainer.appendChild(point);
+            }
+            
+            // Generate minority class points (5)
+            for (let i = 0; i < 5; i++) {
+                const point = document.createElement('span');
+                point.className = 'data-point minority-point animated-point';
+                minorityContainer.appendChild(point);
+            }
+        }
+        
+        // Initialize charts
+        function createDonutChart(ctx, data, colors) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Majority', 'Minority'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize resampling charts
+        function initResamplingCharts() {
+            const originalCtx = document.getElementById('originalChart').getContext('2d');
+            const oversampleCtx = document.getElementById('oversampleChart').getContext('2d');
+            const undersampleCtx = document.getElementById('undersampleChart').getContext('2d');
+            
+            createDonutChart(originalCtx, [950, 50], ['#3498db', '#e74c3c']);
+            createDonutChart(oversampleCtx, [950, 950], ['#3498db', '#e74c3c']);
+            createDonutChart(undersampleCtx, [50, 50], ['#3498db', '#e74c3c']);
+        }
+        
+        // Imbalance slider functionality
+        const imbalanceSlider = document.getElementById('imbalanceSlider');
+        const minorityPercent = document.getElementById('minorityPercent');
+        const ratioDisplay = document.getElementById('ratioDisplay');
+        
+        imbalanceSlider.addEventListener('input', function() {
+            const percent = this.value;
+            minorityPercent.textContent = `${percent}%`;
+            const ratio = Math.round((100 - percent) / percent);
+            ratioDisplay.textContent = `Imbalance Ratio: ${ratio}:1`;
+            
+            // Update visualization
+            updateImbalanceVisualization(percent);
+        });
+        
+        function updateImbalanceVisualization(minorityPercent) {
+            const majorityContainer = document.getElementById('majorityClass');
+            const minorityContainer = document.getElementById('minorityClass');
+            
+            majorityContainer.innerHTML = '';
+            minorityContainer.innerHTML = '';
+            
+            const total = 100;
+            const minorityCount = Math.round(total * minorityPercent / 100);
+            const majorityCount = total - minorityCount;
+            
+            // Generate points
+            for (let i = 0; i < majorityCount; i++) {
+                const point = document.createElement('span');
+                point.className = 'data-point majority-point';
+                majorityContainer.appendChild(point);
+            }
+            
+            for (let i = 0; i < minorityCount; i++) {
+                const point = document.createElement('span');
+                point.className = 'data-point minority-point';
+                if (minorityCount <= 10) {
+                    point.className += ' animated-point';
+                }
+                minorityContainer.appendChild(point);
+            }
+        }
+        
+        // Technique application functions
+        function updateMetrics(accuracy, precision, recall) {
+            const f1 = 2 * (precision * recall) / (precision + recall);
+            
+            document.getElementById('accuracy').textContent = `${accuracy.toFixed(1)}%`;
+            document.getElementById('precision').textContent = `${precision.toFixed(1)}%`;
+            document.getElementById('recall').textContent = `${recall.toFixed(1)}%`;
+            document.getElementById('f1score').textContent = f1.toFixed(2);
+            
+            // Update colors based on values
+            document.getElementById('accuracy').className = `metric-value ${accuracy > 90 ? 'good-metric' : accuracy > 80 ? 'warning-metric' : 'bad-metric'}`;
+            document.getElementById('precision').className = `metric-value ${precision > 70 ? 'good-metric' : precision > 50 ? 'warning-metric' : 'bad-metric'}`;
+            document.getElementById('recall').className = `metric-value ${recall > 70 ? 'good-metric' : recall > 50 ? 'warning-metric' : 'bad-metric'}`;
+            document.getElementById('f1score').className = `metric-value ${f1 > 0.7 ? 'good-metric' : f1 > 0.5 ? 'warning-metric' : 'bad-metric'}`;
+        }
+        
+        function applyNoResampling() {
+            const minorityPerc = parseFloat(imbalanceSlider.value);
+            const accuracy = 100 - minorityPerc + 1;
+            const precision = 60 + Math.random() * 20;
+            const recall = 5 + Math.random() * 10;
+            updateMetrics(accuracy, precision, recall);
+        }
+        
+        function applyOversampling() {
+            const precision = 65 + Math.random() * 15;
+            const recall = 75 + Math.random() * 15;
+            const accuracy = 75 + Math.random() * 10;
+            updateMetrics(accuracy, precision, recall);
+        }
+        
+        function applyUndersampling() {
+            const precision = 60 + Math.random() * 15;
+            const recall = 70 + Math.random() * 15;
+            const accuracy = 70 + Math.random() * 10;
+            updateMetrics(accuracy, precision, recall);
+        }
+        
+        function applyClassWeights() {
+            const precision = 62 + Math.random() * 18;
+            const recall = 72 + Math.random() * 13;
+            const accuracy = 73 + Math.random() * 12;
+            updateMetrics(accuracy, precision, recall);
+        }
+        
+        // Initialize on load
+        window.onload = function() {
+            generateClassPoints();
+            initResamplingCharts();
+            applyNoResampling();
+        };
+    </script>
+</body>
+</html>
