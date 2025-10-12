@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L1 vs L2 Regularization Deep Dive</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .method-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .method-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .l1-card {
+            border-top: 5px solid #e74c3c;
+        }
+        .l2-card {
+            border-top: 5px solid #3498db;
+        }
+        .formula-box {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .visual-demo {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .feature-bar {
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .feature-active {
+            background: #3498db;
+            color: white;
+            transform: scale(1.05);
+        }
+        .feature-zero {
+            background: #e74c3c;
+            color: white;
+            opacity: 0.3;
+        }
+        .interactive-section {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.3s;
+        }
+        button:hover {
+            transform: scale(1.1);
+        }
+        .geometric-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .constraint-region {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        .key-difference {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .coefficient-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .coefficient-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        .coefficient-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            background: white;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #74b9ff 0%, #a29bfe 100%);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .sparsity-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        .weight-vector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .weight-bar {
+            width: 40px;
+            background: #3498db;
+            margin: 3px;
+            border-radius: 5px;
+            transition: all 0.5s;
+        }
+        .scenario-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .pros {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+        .cons {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #dc3545;
+        }
+        .path-animation {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #e74c3c;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 1s;
+        }
+        .slider-container {
+            margin: 20px auto;
+            max-width: 500px;
+        }
+        .slider {
+            width: 100%;
+            height: 40px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #3498db 0%, #e74c3c 100%);
+            border-radius: 20px;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            background: white;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .real-example {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+        }
+        .math-intuition {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .lambda-effect {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .lambda-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        @keyframes shrink {
+            from { height: 100px; }
+            to { height: 20px; }
+        }
+        @keyframes disappear {
+            from { height: 100px; opacity: 1; }
+            to { height: 0px; opacity: 0; }
+        }
+        .animated-bar {
+            animation: shrink 2s ease-in-out infinite alternate;
+        }
+        .animated-disappear {
+            animation: disappear 2s ease-in-out infinite alternate;
+        }
+        .decision-tree {
+            background: #fff3cd;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 5px solid #ffc107;
+        }
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ L1 (Lasso) vs L2 (Ridge) Regularization</h1>
+        <p class="subtitle">Understanding the Core Differences Through Visualization</p>
+
+        <div class="key-difference">
+            <h2 style="text-align: center; color: #e67e22;">🎯 The Fundamental Difference</h2>
+            <p style="text-align: center; font-size: 1.2em; margin-top: 20px;">
+                <strong>L1 (Lasso):</strong> Creates <span class="highlight">SPARSE</span> models (many zeros)<br>
+                <strong>L2 (Ridge):</strong> Creates <span class="highlight">DENSE</span> models (small but non-zero)
+            </p>
+        </div>
+
+        <div class="comparison-container">
+            <div class="method-card l1-card">
+                <h2 style="color: #e74c3c;">📍 L1 Regularization (Lasso)</h2>
+                <div class="formula-box">
+                    Loss = MSE + λ × Σ|w_i|
+                </div>
+                <p style="margin-top: 20px;"><strong>Penalty:</strong> Sum of absolute values</p>
+                <p><strong>Effect:</strong> Forces coefficients to <strong>exactly zero</strong></p>
+                <p><strong>Result:</strong> Automatic feature selection</p>
+                
+                <div class="visual-demo">
+                    <h4>Coefficient Behavior:</h4>
+                    <div class="feature-grid" id="l1Features">
+                        <div class="feature-bar feature-zero">w₁ = 0</div>
+                        <div class="feature-bar feature-active">w₂ = 2.3</div>
+                        <div class="feature-bar feature-zero">w₃ = 0</div>
+                        <div class="feature-bar feature-active">w₄ = 1.8</div>
+                        <div class="feature-bar feature-zero">w₅ = 0</div>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">
+                        <strong>3 out of 5 features eliminated!</strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="method-card l2-card">
+                <h2 style="color: #3498db;">📉 L2 Regularization (Ridge)</h2>
+                <div class="formula-box">
+                    Loss = MSE + λ × Σw_i²
+                </div>
+                <p style="margin-top: 20px;"><strong>Penalty:</strong> Sum of squares</p>
+                <p><strong>Effect:</strong> Shrinks coefficients <strong>toward zero</strong></p>
+                <p><strong>Result:</strong> All features retained (small weights)</p>
+                
+                <div class="visual-demo">
+                    <h4>Coefficient Behavior:</h4>
+                    <div class="feature-grid" id="l2Features">
+                        <div class="feature-bar feature-active">w₁ = 0.3</div>
+                        <div class="feature-bar feature-active">w₂ = 1.2</div>
+                        <div class="feature-bar feature-active">w₃ = 0.1</div>
+                        <div class="feature-bar feature-active">w₄ = 0.9</div>
+                        <div class="feature-bar feature-active">w₅ = 0.2</div>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">
+                        <strong>All features kept (but small)!</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">🔍 Geometric Intuition: Why L1 Creates Sparsity</h2>
+        
+        <div class="geometric-container">
+            <div class="constraint-region">
+                <h3 style="color: #e74c3c;">L1 Constraint (Diamond)</h3>
+                <canvas id="l1Canvas" width="300" height="300"></canvas>
+                <p style="margin-top: 15px;">
+                    <strong>Diamond shape has corners!</strong><br>
+                    Optimization likely hits corners where w₁=0 or w₂=0
+                </p>
+            </div>
+            
+            <div class="constraint-region">
+                <h3 style="color: #3498db;">L2 Constraint (Circle)</h3>
+                <canvas id="l2Canvas" width="300" height="300"></canvas>
+                <p style="margin-top: 15px;">
+                    <strong>Circle has no corners!</strong><br>
+                    Optimization hits smooth edge, both weights stay non-zero
+                </p>
+            </div>
+        </div>
+
+        <div class="interactive-section">
+            <h2>🎮 Interactive Demo: Watch Coefficients Change!</h2>
+            <p>Adjust regularization strength and see how coefficients behave differently</p>
+            
+            <div class="slider-container">
+                <label><strong>Regularization Strength (λ):</strong> <span id="lambdaValue">0.5</span></label>
+                <input type="range" class="slider" id="lambdaSlider" min="0" max="100" value="50">
+            </div>
+            
+            <div class="sparsity-demo">
+                <div class="weight-vector">
+                    <h3 style="color: #e74c3c;">L1 (Lasso)</h3>
+                    <div id="l1Weights"></div>
+                    <p style="margin-top: 10px;">Non-zero: <span id="l1Count">5</span>/10</p>
+                </div>
+                
+                <div class="weight-vector">
+                    <h3 style="color: #3498db;">L2 (Ridge)</h3>
+                    <div id="l2Weights"></div>
+                    <p style="margin-top: 10px;">Non-zero: <span id="l2Count">10</span>/10</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">📊 Side-by-Side Behavior Comparison</h2>
+
+        <table class="coefficient-table">
+            <thead>
+                <tr>
+                    <th>Aspect</th>
+                    <th style="background: #e74c3c;">L1 (Lasso)</th>
+                    <th style="background: #3498db;">L2 (Ridge)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Mathematical Form</strong></td>
+                    <td>|w| (absolute value)</td>
+                    <td>w² (squared)</td>
+                </tr>
+                <tr>
+                    <td><strong>Constraint Shape</strong></td>
+                    <td>Diamond (has corners)</td>
+                    <td>Circle (smooth)</td>
+                </tr>
+                <tr>
+                    <td><strong>Feature Selection</strong></td>
+                    <td>✅ Yes (sets to 0)</td>
+                    <td>❌ No (only shrinks)</td>
+                </tr>
+                <tr>
+                    <td><strong>Sparsity</strong></td>
+                    <td>Creates sparse models</td>
+                    <td>Creates dense models</td>
+                </tr>
+                <tr>
+                    <td><strong>Gradient at 0</strong></td>
+                    <td>Not differentiable</td>
+                    <td>Differentiable everywhere</td>
+                </tr>
+                <tr>
+                    <td><strong>Solution</strong></td>
+                    <td>No closed form</td>
+                    <td>Closed form exists</td>
+                </tr>
+                <tr>
+                    <td><strong>Computation</strong></td>
+                    <td>More expensive</td>
+                    <td>Less expensive</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="math-intuition">
+            <h2 style="text-align: center;">🧮 Mathematical Intuition: Why the Difference?</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+                <div>
+                    <h3 style="color: #e74c3c;">L1 Gradient Behavior</h3>
+                    <p>Gradient of |w| = sign(w)</p>
+                    <ul style="margin-top: 15px;">
+                        <li>Constant push toward 0</li>
+                        <li>Force is <strong>independent</strong> of weight size</li>
+                        <li>Can push weights past 0 → exactly 0</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 style="color: #3498db;">L2 Gradient Behavior</h3>
+                    <p>Gradient of w² = 2w</p>
+                    <ul style="margin-top: 15px;">
+                        <li>Push proportional to weight</li>
+                        <li>Force <strong>decreases</strong> as weight → 0</li>
+                        <li>Never quite reaches 0</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: white; border-radius: 10px;">
+                <h4>The Key Insight:</h4>
+                <p style="font-size: 1.1em; margin-top: 15px;">
+                    L1 applies <strong>constant force</strong> regardless of weight size → can zero out<br>
+                    L2 applies <strong>proportional force</strong> that weakens near zero → never zeros out
+                </p>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">🎯 When to Use Which?</h2>
+
+        <div class="decision-tree">
+            <h3 style="text-align: center;">Decision Framework</h3>
+            <div style="margin-top: 30px; font-size: 1.1em;">
+                <p><strong>Q1: Do you need feature selection?</strong></p>
+                <p>→ Yes: Use <span class="highlight">L1 (Lasso)</span></p>
+                <p>→ No: Continue to Q2</p>
+                
+                <p style="margin-top: 20px;"><strong>Q2: Are your features highly correlated?</strong></p>
+                <p>→ Yes: Use <span class="highlight">L2 (Ridge)</span></p>
+                <p>→ No: Continue to Q3</p>
+                
+                <p style="margin-top: 20px;"><strong>Q3: Do you need model interpretability?</strong></p>
+                <p>→ Yes: Use <span class="highlight">L1 (Lasso)</span></p>
+                <p>→ No: Use <span class="highlight">L2 (Ridge)</span> for stability</p>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">💼 Real-World Examples</h2>
+
+        <div class="scenario-box">
+            <h3>🧬 Example 1: Gene Expression Analysis</h3>
+            <p><strong>Scenario:</strong> 20,000 genes, predict disease outcome</p>
+            <p><strong>Challenge:</strong> Most genes irrelevant, need to find key ones</p>
+            <p><strong>Solution:</strong> <span class="highlight">L1 (Lasso)</span></p>
+            <p><strong>Result:</strong> Identifies 50 relevant genes from 20,000</p>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                <strong>Before L1:</strong> Model with 20,000 features (uninterpretable)<br>
+                <strong>After L1:</strong> Model with 50 features (biologically meaningful)
+            </div>
+        </div>
+
+        <div class="scenario-box">
+            <h3>📸 Example 2: Image Classification</h3>
+            <p><strong>Scenario:</strong> 1 million pixel values as features</p>
+            <p><strong>Challenge:</strong> All pixels contribute, prevent overfitting</p>
+            <p><strong>Solution:</strong> <span class="highlight">L2 (Ridge)</span></p>
+            <p><strong>Result:</strong> Smooth weight distribution, better generalization</p>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                <strong>Why L2?</strong> Every pixel matters for image recognition<br>
+                <strong>Effect:</strong> Prevents any single pixel from dominating
+            </div>
+        </div>
+
+        <div class="scenario-box">
+            <h3>📝 Example 3: Text Classification (Spam Detection)</h3>
+            <p><strong>Scenario:</strong> 10,000 word features (vocabulary)</p>
+            <p><strong>Challenge:</strong> Only certain words indicate spam</p>
+            <p><strong>Solution:</strong> <span class="highlight">L1 (Lasso)</span></p>
+            <p><strong>Result:</strong> Identifies ~200 key spam indicator words</p>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                <strong>Words kept:</strong> "free", "winner", "click", "limited"<br>
+                <strong>Words removed:</strong> "the", "and", "is", "of" (common words)
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">⚖️ Pros and Cons</h2>
+
+        <div class="comparison-container">
+            <div>
+                <h3 style="text-align: center; color: #e74c3c;">L1 (Lasso)</h3>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Pros</h4>
+                        <ul>
+                            <li>Automatic feature selection</li>
+                            <li>Interpretable models</li>
+                            <li>Works well with many irrelevant features</li>
+                            <li>Creates sparse solutions</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>❌ Cons</h4>
+                        <ul>
+                            <li>Can be unstable with correlated features</li>
+                            <li>Computationally expensive</li>
+                            <li>No closed-form solution</li>
+                            <li>May arbitrarily select among correlated features</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 style="text-align: center; color: #3498db;">L2 (Ridge)</h3>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <h4>✅ Pros</h4>
+                        <ul>
+                            <li>Stable with correlated features</li>
+                            <li>Computationally efficient</li>
+                            <li>Has closed-form solution</li>
+                            <li>Smooth, continuous shrinkage</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <h4>❌ Cons</h4>
+                        <ul>
+                            <li>No feature selection</li>
+                            <li>Less interpretable (all features kept)</li>
+                            <li>May include irrelevant features</li>
+                            <li>Doesn't produce sparse models</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">💻 Code Implementation</h2>
+
+        <div class="code-comparison">
+            <div>
+                <h3 style="color: #e74c3c;">L1 (Lasso) Code</h3>
+                <div class="code-block">
+<pre>from sklearn.linear_model import Lasso
+import numpy as np
+
+# Create Lasso model
+lasso = Lasso(alpha=0.1)
+lasso.fit(X_train, y_train)
+
+# Check sparsity
+coefficients = lasso.coef_
+n_zeros = np.sum(coefficients == 0)
+print(f"Zero coefficients: {n_zeros}/{len(coefficients)}")
+
+# Feature selection
+selected_features = np.where(coefficients != 0)[0]
+print(f"Selected features: {selected_features}")</pre>
+                </div>
+            </div>
+            
+            <div>
+                <h3 style="color: #3498db;">L2 (Ridge) Code</h3>
+                <div class="code-block">
+<pre>from sklearn.linear_model import Ridge
+import numpy as np
+
+# Create Ridge model
+ridge = Ridge(alpha=1.0)
+ridge.fit(X_train, y_train)
+
+# Check coefficients (all non-zero)
+coefficients = ridge.coef_
+n_small = np.sum(np.abs(coefficients) < 0.01)
+print(f"Very small coefficients: {n_small}/{len(coefficients)}")
+
+# All features retained
+print(f"All {len(coefficients)} features used")</pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; color: #667eea; margin: 40px 0;">🔬 The λ (Lambda) Effect</h2>
+
+        <div class="lambda-effect">
+            <div class="lambda-card">
+                <h4>λ = 0 (No Regularization)</h4>
+                <p style="margin-top: 15px;">
+                    <strong>L1:</strong> All weights free<br>
+                    <strong>L2:</strong> All weights free<br>
+                    <span style="color: #e74c3c;">Risk: Overfitting!</span>
+                </p>
+            </div>
+            
+            <div class="lambda-card">
+                <h4>λ = Moderate</h4>
+                <p style="margin-top: 15px;">
+                    <strong>L1:</strong> Some weights → 0<br>
+                    <strong>L2:</strong> All weights shrink<br>
+                    <span style="color: #27ae60;">Optimal balance!</span>
+                </p>
+            </div>
+            
+            <div class="lambda-card">
+                <h4>λ → ∞</h4>
+                <p style="margin-top: 15px;">
+                    <strong>L1:</strong> All weights → 0<br>
+                    <strong>L2:</strong> All weights → 0<br>
+                    <span style="color: #e74c3c;">Risk: Underfitting!</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="interactive-section">
+            <h2>📊 Visualize Coefficient Paths</h2>
+            <p>See how coefficients change as λ increases</p>
+            
+            <div class="chart-container">
+                <canvas id="pathChart"></canvas>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="showL1Path()">Show L1 (Lasso) Path</button>
+                <button onclick="showL2Path()">Show L2 (Ridge) Path</button>
+                <button onclick="showBothPaths()">Compare Both</button>
+            </div>
+        </div>
+
+        <div class="real-example">
+            <h2 style="text-align: center;">🌟 Real Research Example: Diabetes Prediction</h2>
+            <p style="margin-top: 20px;">The famous diabetes dataset has 442 patients with 10 features:</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;">
+                    <h3>Using L1 (Lasso):</h3>
+                    <ul>
+                        <li>Started with 10 features</li>
+                        <li>After regularization: 4 features remain</li>
+                        <li>Key features: BMI, blood pressure, glucose, age</li>
+                        <li>Removed: sex, lipid measurements</li>
+                        <li><strong>Interpretation:</strong> Found most important risk factors</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;">
+                    <h3>Using L2 (Ridge):</h3>
+                    <ul>
+                        <li>Started with 10 features</li>
+                        <li>After regularization: All 10 features remain</li>
+                        <li>Weights distributed across all features</li>
+                        <li>Largest weights: BMI, glucose</li>
+                        <li><strong>Interpretation:</strong> All factors contribute, some more than others</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="key-difference" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <h2 style="text-align: center;">🎯 Summary: The Core Distinction</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+                <div style="text-align: center;">
+                    <h3>L1 (Lasso)</h3>
+                    <p style="font-size: 3em; margin: 20px 0;">✂️</p>
+                    <p>"I'll cut out unnecessary features"</p>
+                    <p style="margin-top: 10px;"><strong>Creates SPARSE models</strong></p>
+                </div>
+                
+                <div style="text-align: center;">
+                    <h3>L2 (Ridge)</h3>
+                    <p style="font-size: 3em; margin: 20px 0;">🔽</p>
+                    <p>"I'll shrink everything proportionally"</p>
+                    <p style="margin-top: 10px;"><strong>Creates DENSE models</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="decision-tree" style="background: #e8f5e9; border-left-color: #4caf50;">
+            <h2 style="text-align: center;">💡 Quick Decision Guide</h2>
+            <div style="text-align: center; margin-top: 30px; font-size: 1.1em;">
+                <p><strong>Need interpretability?</strong> → L1 (Lasso)</p>
+                <p><strong>Have many irrelevant features?</strong> → L1 (Lasso)</p>
+                <p><strong>Features are correlated?</strong> → L2 (Ridge)</p>
+                <p><strong>All features matter?</strong> → L2 (Ridge)</p>
+                <p><strong>Want the best of both?</strong> → Elastic Net (L1 + L2)</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Draw constraint regions
+        function drawL1Constraint() {
+            const canvas = document.getElementById('l1Canvas');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const size = 100;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            // Draw diamond (L1 constraint)
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.3)';
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - size);
+            ctx.lineTo(centerX + size, centerY);
+            ctx.lineTo(centerX, centerY + size);
+            ctx.lineTo(centerX - size, centerY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw contours (error function)
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 1;
+            for (let r = 30; r <= 150; r += 30) {
+                ctx.beginPath();
+                ctx.arc(centerX + 20, centerY - 20, r, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+            
+            // Draw optimal point (at corner)
+            ctx.fillStyle = '#2ecc71';
+            ctx.beginPath();
+            ctx.arc(centerX + size, centerY, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Labels
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '14px Arial';
+            ctx.fillText('w₁', canvas.width - 20, centerY - 5);
+            ctx.fillText('w₂', centerX + 5, 15);
+            ctx.fillText('Optimal at corner!', centerX + size - 50, centerY + 25);
+        }
+        
+        function drawL2Constraint() {
+            const canvas = document.getElementById('l2Canvas');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 100;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            // Draw circle (L2 constraint)
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.3)';
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw contours (error function)
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 1;
+            for (let r = 30; r <= 150; r += 30) {
+                ctx.beginPath();
+                ctx.arc(centerX + 20, centerY - 20, r, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+            
+            // Draw optimal point (on smooth edge)
+            const angle = -Math.PI / 4;
+            const optX = centerX + radius * Math.cos(angle);
+            const optY = centerY + radius * Math.sin(angle);
+            ctx.fillStyle = '#2ecc71';
+            ctx.beginPath();
+            ctx.arc(optX, optY, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Labels
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '14px Arial';
+            ctx.fillText('w₁', canvas.width - 20, centerY - 5);
+            ctx.fillText('w₂', centerX + 5, 15);
+            ctx.fillText('No corners!', optX - 30, optY + 25);
+        }
+        
+        // Initialize constraint region drawings
+        drawL1Constraint();
+        drawL2Constraint();
+        
+        // Lambda slider functionality
+        const lambdaSlider = document.getElementById('lambdaSlider');
+        const lambdaValue = document.getElementById('lambdaValue');
+        const l1Count = document.getElementById('l1Count');
+        const l2Count = document.getElementById('l2Count');
+        const l1Weights = document.getElementById('l1Weights');
+        const l2Weights = document.getElementById('l2Weights');
+        
+        function updateWeights(lambda) {
+            // Clear previous weights
+            l1Weights.innerHTML = '';
+            l2Weights.innerHTML = '';
+            
+            // Generate initial weights
+            const weights = [2.5, 1.8, 0.3, 3.2, 0.1, 1.5, 0.7, 2.1, 0.4, 1.2];
+            
+            // L1: Create sparsity
+            let l1NonZero = 0;
+            weights.forEach((w, i) => {
+                const threshold = lambda / 30;
+                const newWeight = Math.abs(w) > threshold ? w - Math.sign(w) * threshold : 0;
+                const bar = document.createElement('div');
+                bar.className = 'weight-bar';
+                bar.style.height = Math.abs(newWeight) * 30 + 'px';
+                bar.style.backgroundColor = newWeight === 0 ? '#e74c3c' : '#3498db';
+                bar.style.opacity = newWeight === 0 ? '0.3' : '1';
+                bar.title = `w${i+1} = ${newWeight.toFixed(2)}`;
+                l1Weights.appendChild(bar);
+                if (newWeight !== 0) l1NonZero++;
+            });
+            
+            // L2: Shrink proportionally
+            let l2NonZero = 0;
+            weights.forEach((w, i) => {
+                const shrinkFactor = 1 / (1 + lambda / 50);
+                const newWeight = w * shrinkFactor;
+                const bar = document.createElement('div');
+                bar.className = 'weight-bar';
+                bar.style.height = Math.abs(newWeight) * 30 + 'px';
+                bar.style.backgroundColor = '#3498db';
+                bar.title = `w${i+1} = ${newWeight.toFixed(2)}`;
+                l2Weights.appendChild(bar);
+                if (Math.abs(newWeight) > 0.001) l2NonZero++;
+            });
+            
+            l1Count.textContent = l1NonZero;
+            l2Count.textContent = l2NonZero;
+        }
+        
+        lambdaSlider.addEventListener('input', function() {
+            const lambda = this.value / 100;
+            lambdaValue.textContent = lambda.toFixed(2);
+            updateWeights(this.value);
+        });
+        
+        // Initialize weights
+        updateWeights(50);
+        
+        // Coefficient path chart
+        const pathCtx = document.getElementById('pathChart').getContext('2d');
+        let pathChart;
+        
+        function generatePathData(type) {
+            const lambdas = [];
+            const datasets = [];
+            const features = ['Age', 'BMI', 'Blood Pressure', 'Glucose', 'Insulin'];
+            const initialWeights = [1.5, 2.8, 1.2, 3.5, 0.8];
+            
+            for (let l = 0; l <= 10; l += 0.5) {
+                lambdas.push(l);
+            }
+            
+            features.forEach((feature, i) => {
+                const data = [];
+                lambdas.forEach(lambda => {
+                    let weight;
+                    if (type === 'l1') {
+                        // L1: Sharp transitions to 0
+                        const threshold = lambda * (0.3 + i * 0.1);
+                        weight = Math.max(0, initialWeights[i] - threshold);
+                    } else {
+                        // L2: Smooth decay
+                        weight = initialWeights[i] / (1 + lambda * 0.3);
+                    }
+                    data.push(weight);
+                });
+                
+                datasets.push({
+                    label: feature,
+                    data: data,
+                    borderColor: `hsl(${i * 60}, 70%, 50%)`,
+                    borderWidth: 2,
+                    fill: false
+                });
+            });
+            
+            return { lambdas, datasets };
+        }
+        
+        function showL1Path() {
+            const { lambdas, datasets } = generatePathData('l1');
+            
+            if (pathChart) pathChart.destroy();
+            
+            pathChart = new Chart(pathCtx, {
+                type: 'line',
+                data: {
+                    labels: lambdas,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'L1 (Lasso) Coefficient Path - Sharp Transitions to Zero',
+                            font: { size: 16 }
+                        },
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Regularization Strength (λ)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Coefficient Value'
+                            },
+                            min: 0
+                        }
+                    }
+                }
+            });
+        }
+        
+        function showL2Path() {
+            const { lambdas, datasets } = generatePathData('l2');
+            
+            if (pathChart) pathChart.destroy();
+            
+            pathChart = new Chart(pathCtx, {
+                type: 'line',
+                data: {
+                    labels: lambdas,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'L2 (Ridge) Coefficient Path - Smooth Decay',
+                            font: { size: 16 }
+                        },
+                        legend: { display: true }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Regularization Strength (λ)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Coefficient Value'
+                            },
+                            min: 0
+                        }
+                    }
+                }
+            });
+        }
+        
+        function showBothPaths() {
+            const l1Data = generatePathData('l1');
+            const l2Data = generatePathData('l2');
+            
+            // Combine datasets
+            const combinedDatasets = [];
+            l1Data.datasets.forEach((ds, i) => {
+                combinedDatasets.push({
+                    ...ds,
+                    label: `${ds.label} (L1)`,
+                    borderDash: [5, 5]
+                });
+                combinedDatasets.push({
+                    ...l2Data.datasets[i],
+                    label: `${l2Data.datasets[i].label} (L2)`
+                });
+            });
+            
+            if (pathChart) pathChart.destroy();
+            
+            pathChart = new Chart(pathCtx, {
+                type: 'line',
+                data: {
+                    labels: l1Data.lambdas,
+                    datasets: combinedDatasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'L1 vs L2: Coefficient Paths Comparison',
+                            font: { size: 16 }
+                        },
+                        legend: { 
+                            display: true,
+                            labels: { font: { size: 10 } }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Regularization Strength (λ)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Coefficient Value'
+                            },
+                            min: 0
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize with L1 path
+        showL1Path();
+    </script>
+</body>
+</html>
