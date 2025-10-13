@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activation Functions Explained</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        h2 {
+            color: #764ba2;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        h3 {
+            color: #34495e;
+            margin: 20px 0 15px 0;
+        }
+        .intro-story {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .analogy-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .activation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .activation-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .activation-card:hover {
+            transform: translateY(-5px);
+        }
+        .relu-card {
+            border-top: 5px solid #27ae60;
+        }
+        .sigmoid-card {
+            border-top: 5px solid #3498db;
+        }
+        .tanh-card {
+            border-top: 5px solid #e74c3c;
+        }
+        .formula-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            position: relative;
+        }
+        .interactive-demo {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .neuron-demo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 30px;
+        }
+        .neuron {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .input-neuron {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .output-neuron {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            background: white;
+        }
+        .comparison-table tr:hover td {
+            background: #f8f9fa;
+        }
+        .info-box {
+            background: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success-box {
+            background: #d4edda;
+            border-left: 5px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .slider {
+            width: 100%;
+            height: 40px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .real-world-example {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .visualization-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        .gradient-problem {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .gradient-box {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .vanishing {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+        }
+        .exploding {
+            background: linear-gradient(135deg, #fab1a0, #ff7675);
+        }
+        .just-right {
+            background: linear-gradient(135deg, #81ecec, #74b9ff);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Activation Functions in Neural Networks</h1>
+        <p class="subtitle">The Secret Sauce That Makes Neural Networks Learn</p>
+
+        <div class="intro-story">
+            <h2 style="color: white; border: none;">🧠 Why Do We Need Activation Functions?</h2>
+            <p>Imagine a neural network as a company with many employees (neurons):</p>
+            <ul style="margin: 15px 0;">
+                <li>Each employee receives information (inputs)</li>
+                <li>They process it (weights and bias)</li>
+                <li>But here's the key: <strong>They need to decide HOW to respond</strong></li>
+            </ul>
+            <p style="margin-top: 15px;">Without activation functions, every employee would just pass along information linearly - like a boring game of telephone. <strong>Activation functions let neurons make non-linear decisions</strong>, enabling the network to learn complex patterns!</p>
+        </div>
+
+        <h2>🎯 The Core Problem: Linear vs Non-Linear</h2>
+        <div class="analogy-box">
+            <h3>The Decision-Making Analogy</h3>
+            <p>Think of activation functions like decision rules:</p>
+            
+            <div class="neuron-demo">
+                <div class="neuron input-neuron">
+                    Input: 5.2
+                </div>
+                <span class="arrow">→</span>
+                <div style="text-align: center;">
+                    <p><strong>Without Activation:</strong></p>
+                    <p>Output = 5.2 × weight</p>
+                    <p style="color: #e74c3c;">Just multiplication!</p>
+                </div>
+                <span class="arrow">→</span>
+                <div class="neuron output-neuron">
+                    Linear Output
+                </div>
+            </div>
+            
+            <div class="neuron-demo">
+                <div class="neuron input-neuron">
+                    Input: 5.2
+                </div>
+                <span class="arrow">→</span>
+                <div style="text-align: center;">
+                    <p><strong>With Activation:</strong></p>
+                    <p>Output = f(5.2 × weight)</p>
+                    <p style="color: #27ae60;">Non-linear transformation!</p>
+                </div>
+                <span class="arrow">→</span>
+                <div class="neuron output-neuron animate-pulse">
+                    Smart Output
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <strong>Key Insight:</strong> Without activation functions, even a 100-layer network would be equivalent to a single layer! The activation functions add the "intelligence" to make complex decisions.
+            </div>
+        </div>
+
+        <h2>📊 The Three Most Popular Activation Functions</h2>
+        <div class="activation-grid">
+            <div class="activation-card relu-card">
+                <h3>1️⃣ ReLU (Rectified Linear Unit)</h3>
+                <p><strong>The Gatekeeper</strong></p>
+                <div class="formula-box">
+                    f(x) = max(0, x)
+                </div>
+                <p><strong>Simple Rule:</strong> If positive, let it through. If negative, block it (output 0).</p>
+                <p style="margin-top: 15px;"><strong>Real-Life Analogy:</strong> Like a door that only opens one way - negative thoughts stay out, positive ones pass through!</p>
+                <ul style="margin: 15px 0;">
+                    <li>✅ Very fast to compute</li>
+                    <li>✅ No vanishing gradient</li>
+                    <li>❌ "Dying ReLU" problem</li>
+                </ul>
+                <canvas id="reluChart"></canvas>
+            </div>
+            
+            <div class="activation-card sigmoid-card">
+                <h3>2️⃣ Sigmoid</h3>
+                <p><strong>The Probability Converter</strong></p>
+                <div class="formula-box">
+                    f(x) = 1 / (1 + e^(-x))
+                </div>
+                <p><strong>Simple Rule:</strong> Squash any input to a value between 0 and 1.</p>
+                <p style="margin-top: 15px;"><strong>Real-Life Analogy:</strong> Like a dimmer switch - converts any brightness level to a percentage!</p>
+                <ul style="margin: 15px 0;">
+                    <li>✅ Output is probability-like (0-1)</li>
+                    <li>✅ Smooth gradient</li>
+                    <li>❌ Vanishing gradient problem</li>
+                </ul>
+                <canvas id="sigmoidChart"></canvas>
+            </div>
+            
+            <div class="activation-card tanh-card">
+                <h3>3️⃣ Tanh (Hyperbolic Tangent)</h3>
+                <p><strong>The Balanced Squasher</strong></p>
+                <div class="formula-box">
+                    f(x) = (e^x - e^(-x)) / (e^x + e^(-x))
+                </div>
+                <p><strong>Simple Rule:</strong> Squash any input to a value between -1 and 1.</p>
+                <p style="margin-top: 15px;"><strong>Real-Life Analogy:</strong> Like a mood meter - can be positive or negative, but within limits!</p>
+                <ul style="margin: 15px 0;">
+                    <li>✅ Zero-centered output</li>
+                    <li>✅ Stronger gradients than sigmoid</li>
+                    <li>❌ Still has vanishing gradient</li>
+                </ul>
+                <canvas id="tanhChart"></canvas>
+            </div>
+        </div>
+
+        <h2>🎮 Interactive Demo: See Them In Action!</h2>
+        <div class="interactive-demo">
+            <h3>Test Different Activation Functions</h3>
+            <div class="slider-container">
+                <label>Input Value: <span id="inputValue">0</span></label>
+                <input type="range" class="slider" id="inputSlider" min="-10" max="10" step="0.1" value="0">
+            </div>
+            
+            <div class="visualization-box">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;">
+                    <div>
+                        <h4 style="color: #27ae60;">ReLU</h4>
+                        <div class="formula-box">max(0, x)</div>
+                        <p>Input: <span id="reluInput">0</span></p>
+                        <p style="font-size: 1.5em; font-weight: bold; color: #27ae60;">Output: <span id="reluOutput">0</span></p>
+                    </div>
+                    <div>
+                        <h4 style="color: #3498db;">Sigmoid</h4>
+                        <div class="formula-box">1/(1+e^(-x))</div>
+                        <p>Input: <span id="sigmoidInput">0</span></p>
+                        <p style="font-size: 1.5em; font-weight: bold; color: #3498db;">Output: <span id="sigmoidOutput">0.5</span></p>
+                    </div>
+                    <div>
+                        <h4 style="color: #e74c3c;">Tanh</h4>
+                        <div class="formula-box">tanh(x)</div>
+                        <p>Input: <span id="tanhInput">0</span></p>
+                        <p style="font-size: 1.5em; font-weight: bold; color: #e74c3c;">Output: <span id="tanhOutput">0</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="demonstrateNeuralNetwork()">See Full Neural Network Example</button>
+            <div id="networkDemo"></div>
+        </div>
+
+        <h2>🌟 Real-World Examples</h2>
+        <div class="real-world-example">
+            <h3>🖼️ Example 1: Image Recognition (Cat vs Dog)</h3>
+            <p><strong>Network Structure:</strong></p>
+            <ul>
+                <li><strong>Input Layer:</strong> Pixel values (0-255)</li>
+                <li><strong>Hidden Layers:</strong> Use <span class="highlight">ReLU</span> - fast and effective for deep networks</li>
+                <li><strong>Output Layer:</strong> Use <span class="highlight">Sigmoid</span> - gives probability (0=dog, 1=cat)</li>
+            </ul>
+            
+            <div class="visualization-box">
+                <p><strong>Why this combination?</strong></p>
+                <ul>
+                    <li>ReLU in hidden layers: Prevents vanishing gradient in deep networks</li>
+                    <li>Sigmoid at output: Perfect for binary classification (probability)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="real-world-example">
+            <h3>💰 Example 2: Stock Price Prediction</h3>
+            <p><strong>Network Structure:</strong></p>
+            <ul>
+                <li><strong>Input Layer:</strong> Historical prices, volume, indicators</li>
+                <li><strong>Hidden Layers:</strong> Use <span class="highlight">Tanh</span> - handles positive and negative changes</li>
+                <li><strong>Output Layer:</strong> <span class="highlight">Linear</span> (no activation) - predicts actual price</li>
+            </ul>
+            
+            <div class="visualization-box">
+                <p><strong>Why this combination?</strong></p>
+                <ul>
+                    <li>Tanh: Stock changes can be positive or negative</li>
+                    <li>Linear output: We want actual price values, not probabilities</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="real-world-example">
+            <h3>🗣️ Example 3: Sentiment Analysis (Positive/Negative/Neutral)</h3>
+            <p><strong>Network Structure:</strong></p>
+            <ul>
+                <li><strong>Input Layer:</strong> Word embeddings</li>
+                <li><strong>Hidden Layers:</strong> Use <span class="highlight">ReLU</span> - standard for NLP</li>
+                <li><strong>Output Layer:</strong> Use <span class="highlight">Softmax</span> - multi-class probabilities</li>
+            </ul>
+        </div>
+
+        <h2>⚠️ The Gradient Problems</h2>
+        <div class="gradient-problem">
+            <div class="gradient-box vanishing">
+                <h4>Vanishing Gradient</h4>
+                <p>Sigmoid/Tanh Problem</p>
+                <p>Gradients become too small</p>
+                <p>Network stops learning</p>
+            </div>
+            <div class="gradient-box exploding">
+                <h4>Exploding Gradient</h4>
+                <p>Unstable networks</p>
+                <p>Gradients become too large</p>
+                <p>Weights blow up</p>
+            </div>
+            <div class="gradient-box just-right">
+                <h4>Just Right (ReLU)</h4>
+                <p>Stable gradients</p>
+                <p>Fast learning</p>
+                <p>But watch for dying neurons!</p>
+            </div>
+        </div>
+
+        <h2>📊 Detailed Comparison</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>ReLU</th>
+                    <th>Sigmoid</th>
+                    <th>Tanh</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Formula</strong></td>
+                    <td>max(0, x)</td>
+                    <td>1/(1 + e^(-x))</td>
+                    <td>tanh(x)</td>
+                </tr>
+                <tr>
+                    <td><strong>Output Range</strong></td>
+                    <td>[0, ∞)</td>
+                    <td>(0, 1)</td>
+                    <td>(-1, 1)</td>
+                </tr>
+                <tr>
+                    <td><strong>Computation Speed</strong></td>
+                    <td>⚡ Very Fast</td>
+                    <td>🐢 Slow (exponential)</td>
+                    <td>🐢 Slow (exponential)</td>
+                </tr>
+                <tr>
+                    <td><strong>Gradient Flow</strong></td>
+                    <td>✅ Good (no vanishing)</td>
+                    <td>❌ Vanishing gradient</td>
+                    <td>⚠️ Less vanishing than sigmoid</td>
+                </tr>
+                <tr>
+                    <td><strong>Zero-Centered</strong></td>
+                    <td>❌ No</td>
+                    <td>❌ No</td>
+                    <td>✅ Yes</td>
+                </tr>
+                <tr>
+                    <td><strong>Best Use Case</strong></td>
+                    <td>Hidden layers (default choice)</td>
+                    <td>Binary classification output</td>
+                    <td>Hidden layers in RNNs</td>
+                </tr>
+                <tr>
+                    <td><strong>Main Problem</strong></td>
+                    <td>Dying ReLU (neurons stop)</td>
+                    <td>Vanishing gradient</td>
+                    <td>Vanishing gradient</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>💻 Python Implementation</h2>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('numpy-impl')">NumPy Implementation</button>
+            <button class="tab" onclick="showTab('tensorflow-impl')">TensorFlow/Keras</button>
+            <button class="tab" onclick="showTab('pytorch-impl')">PyTorch</button>
+        </div>
+
+        <div id="numpy-impl" class="tab-content active">
+            <div class="code-block">
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ReLU Implementation
+def relu(x):
+    return np.maximum(0, x)
+
+def relu_derivative(x):
+    return np.where(x > 0, 1, 0)
+
+# Sigmoid Implementation
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    s = sigmoid(x)
+    return s * (1 - s)
+
+# Tanh Implementation
+def tanh(x):
+    return np.tanh(x)
+
+def tanh_derivative(x):
+    return 1 - np.tanh(x)**2
+
+# Visualize all three
+x = np.linspace(-5, 5, 100)
+
+plt.figure(figsize=(15, 4))
+
+# ReLU
+plt.subplot(1, 3, 1)
+plt.plot(x, relu(x), 'g-', linewidth=2, label='ReLU')
+plt.plot(x, relu_derivative(x), 'g--', alpha=0.5, label='Derivative')
+plt.title('ReLU Activation')
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+# Sigmoid
+plt.subplot(1, 3, 2)
+plt.plot(x, sigmoid(x), 'b-', linewidth=2, label='Sigmoid')
+plt.plot(x, sigmoid_derivative(x), 'b--', alpha=0.5, label='Derivative')
+plt.title('Sigmoid Activation')
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+# Tanh
+plt.subplot(1, 3, 3)
+plt.plot(x, tanh(x), 'r-', linewidth=2, label='Tanh')
+plt.plot(x, tanh_derivative(x), 'r--', alpha=0.5, label='Derivative')
+plt.title('Tanh Activation')
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Example: Simple neural network forward pass
+def simple_network(input_data, activation='relu'):
+    # Layer 1
+    z1 = np.dot(input_data, w1) + b1
+    if activation == 'relu':
+        a1 = relu(z1)
+    elif activation == 'sigmoid':
+        a1 = sigmoid(z1)
+    else:
+        a1 = tanh(z1)
+    
+    # Output layer
+    z2 = np.dot(a1, w2) + b2
+    output = sigmoid(z2)  # For binary classification
+    
+    return output
+
+# Example usage
+input_data = np.array([0.5, 0.3, 0.8])
+w1 = np.random.randn(3, 4)
+b1 = np.zeros(4)
+w2 = np.random.randn(4, 1)
+b2 = np.zeros(1)
+
+result = simple_network(input_data, 'relu')
+print(f"Network output: {result[0]:.4f}")
+            </div>
+        </div>
+
+        <div id="tensorflow-impl" class="tab-content">
+            <div class="code-block">
+import tensorflow as tf
+from tensorflow import keras
+
+# Building a model with different activation functions
+model = keras.Sequential([
+    # Input layer
+    keras.layers.Dense(128, input_shape=(784,)),
+    
+    # Hidden layers with ReLU (most common)
+    keras.layers.Dense(64, activation='relu'),
+    keras.layers.Dense(32, activation='relu'),
+    
+    # Try different activations
+    # keras.layers.Dense(64, activation='tanh'),
+    # keras.layers.Dense(32, activation='sigmoid'),
+    
+    # Output layer for multi-class classification
+    keras.layers.Dense(10, activation='softmax')
+])
+
+# Advanced activation functions
+model_advanced = keras.Sequential([
+    keras.layers.Dense(128, input_shape=(784,)),
+    
+    # Leaky ReLU - solves dying ReLU problem
+    keras.layers.LeakyReLU(alpha=0.1),
+    
+    # ELU - Exponential Linear Unit
+    keras.layers.Dense(64),
+    keras.layers.ELU(),
+    
+    # Swish activation (x * sigmoid(x))
+    keras.layers.Dense(32, activation='swish'),
+    
+    keras.layers.Dense(10, activation='softmax')
+])
+
+# Custom activation function
+def custom_activation(x):
+    return tf.nn.relu(x) - tf.nn.relu(x - 6)  # ReLU6
+
+model_custom = keras.Sequential([
+    keras.layers.Dense(128, activation=custom_activation),
+    keras.layers.Dense(10, activation='softmax')
+])
+
+model.summary()
+            </div>
+        </div>
+
+        <div id="pytorch-impl" class="tab-content">
+            <div class="code-block">
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class NeuralNetwork(nn.Module):
+    def __init__(self):
+        super(NeuralNetwork, self).__init__()
+        self.fc1 = nn.Linear(784, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 32)
+        self.fc4 = nn.Linear(32, 10)
+        
+    def forward(self, x):
+        # ReLU activation
+        x = F.relu(self.fc1(x))
+        
+        # Sigmoid activation
+        # x = torch.sigmoid(self.fc2(x))
+        
+        # Tanh activation
+        # x = torch.tanh(self.fc2(x))
+        
+        # Common pattern: ReLU in hidden layers
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        
+        # No activation for regression, softmax for classification
+        x = self.fc4(x)
+        return F.log_softmax(x, dim=1)
+
+# Advanced activations in PyTorch
+class AdvancedNetwork(nn.Module):
+    def __init__(self):
+        super(AdvancedNetwork, self).__init__()
+        self.fc1 = nn.Linear(784, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 10)
+        
+        # Different activation modules
+        self.leaky_relu = nn.LeakyReLU(0.1)
+        self.elu = nn.ELU()
+        self.gelu = nn.GELU()  # Gaussian Error Linear Unit
+        
+    def forward(self, x):
+        x = self.leaky_relu(self.fc1(x))
+        x = self.elu(self.fc2(x))
+        x = self.fc3(x)
+        return F.log_softmax(x, dim=1)
+
+# Create and test model
+model = NeuralNetwork()
+input_tensor = torch.randn(1, 784)
+output = model(input_tensor)
+print(f"Output shape: {output.shape}")
+            </div>
+        </div>
+
+        <h2>🎯 Choosing the Right Activation Function</h2>
+        <div class="success-box">
+            <h3>Quick Decision Guide:</h3>
+            <ol>
+                <li><strong>Default Choice for Hidden Layers:</strong> ReLU
+                    <ul>
+                        <li>Fast, simple, works well in practice</li>
+                        <li>If dying ReLU occurs, try Leaky ReLU or ELU</li>
+                    </ul>
+                </li>
+                <li><strong>Binary Classification Output:</strong> Sigmoid
+                    <ul>
+                        <li>Outputs probability between 0 and 1</li>
+                    </ul>
+                </li>
+                <li><strong>Multi-Class Classification Output:</strong> Softmax
+                    <ul>
+                        <li>Outputs probability distribution</li>
+                    </ul>
+                </li>
+                <li><strong>Regression Output:</strong> None (Linear)
+                    <ul>
+                        <li>Predict actual values</li>
+                    </ul>
+                </li>
+                <li><strong>RNN/LSTM Hidden States:</strong> Tanh
+                    <ul>
+                        <li>Zero-centered helps with gradient flow</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Common Pitfalls to Avoid:</h3>
+            <ul>
+                <li>Don't use sigmoid/tanh in deep networks (vanishing gradient)</li>
+                <li>Don't use ReLU with high learning rates (dying neurons)</li>
+                <li>Don't forget activation in hidden layers (linear network)</li>
+                <li>Don't use wrong output activation (sigmoid for regression)</li>
+            </ul>
+        </div>
+
+        <h2>💡 Key Takeaways</h2>
+        <div class="info-box">
+            <h3>Remember These Points:</h3>
+            <ol>
+                <li><strong>Activation functions add non-linearity</strong> - Without them, deep networks = shallow networks</li>
+                <li><strong>ReLU is the default hero</strong> - Use it unless you have a specific reason not to</li>
+                <li><strong>Output layer depends on task</strong> - Sigmoid (binary), Softmax (multi-class), None (regression)</li>
+                <li><strong>Watch for gradient problems</strong> - Vanishing (sigmoid/tanh) or dying (ReLU)</li>
+                <li><strong>Modern variants exist</strong> - Leaky ReLU, ELU, Swish, GELU for specific problems</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Function to draw activation function charts
+        function drawActivationChart(canvasId, func, color, label) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 200;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, height/2);
+            ctx.lineTo(width - padding, height/2);
+            ctx.moveTo(width/2, padding);
+            ctx.lineTo(width/2, height - padding);
+            ctx.stroke();
+            
+            // Draw function
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let px = padding; px < width - padding; px++) {
+                const x = ((px - padding) / (width - 2*padding) - 0.5) * 10;
+                const y = func(x);
+                const py = height/2 - y * (height - 2*padding) / 4;
+                
+                if (px === padding) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            ctx.stroke();
+        }
+
+        // Activation functions
+        function relu(x) {
+            return Math.max(0, x);
+        }
+
+        function sigmoid(x) {
+            return 1 / (1 + Math.exp(-x));
+        }
+
+        function tanh(x) {
+            return Math.tanh(x);
+        }
+
+        // Draw charts on load
+        window.addEventListener('load', () => {
+            drawActivationChart('reluChart', relu, '#27ae60', 'ReLU');
+            drawActivationChart('sigmoidChart', sigmoid, '#3498db', 'Sigmoid');
+            drawActivationChart('tanhChart', tanh, '#e74c3c', 'Tanh');
+        });
+
+        // Interactive demo
+        const slider = document.getElementById('inputSlider');
+        const inputValueDisplay = document.getElementById('inputValue');
+        
+        // Output displays
+        const reluInput = document.getElementById('reluInput');
+        const reluOutput = document.getElementById('reluOutput');
+        const sigmoidInput = document.getElementById('sigmoidInput');
+        const sigmoidOutput = document.getElementById('sigmoidOutput');
+        const tanhInput = document.getElementById('tanhInput');
+        const tanhOutput = document.getElementById('tanhOutput');
+
+        slider.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            inputValueDisplay.textContent = value.toFixed(1);
+            
+            // Update all inputs
+            reluInput.textContent = value.toFixed(1);
+            sigmoidInput.textContent = value.toFixed(1);
+            tanhInput.textContent = value.toFixed(1);
+            
+            // Calculate outputs
+            reluOutput.textContent = relu(value).toFixed(3);
+            sigmoidOutput.textContent = sigmoid(value).toFixed(3);
+            tanhOutput.textContent = tanh(value).toFixed(3);
+        });
+
+        // Tab functionality
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Neural network demonstration
+        function demonstrateNeuralNetwork() {
+            const demo = document.getElementById('networkDemo');
+            demo.innerHTML = `
+                <div class="visualization-box" style="margin-top: 20px;">
+                    <h4>Complete Example: 2-Layer Network</h4>
+                    <div style="text-align: center;">
+                        <p><strong>Input:</strong> x = 2.5</p>
+                        <p style="margin: 10px 0;">↓</p>
+                        <p><strong>Layer 1:</strong> z₁ = 2.5 × 0.8 + 0.3 = 2.3</p>
+                        <p><strong>ReLU:</strong> a₁ = max(0, 2.3) = 2.3</p>
+                        <p style="margin: 10px 0;">↓</p>
+                        <p><strong>Layer 2:</strong> z₂ = 2.3 × 0.6 - 0.5 = 0.88</p>
+                        <p><strong>Sigmoid:</strong> output = 1/(1+e^(-0.88)) = 0.707</p>
+                        <p style="margin: 10px 0;">↓</p>
+                        <p style="font-size: 1.2em; color: #27ae60;"><strong>Final Output: 0.707 (70.7% probability)</strong></p>
+                    </div>
+                    <div class="info-box" style="margin-top: 20px;">
+                        <strong>What happened?</strong>
+                        <ul>
+                            <li>ReLU in hidden layer kept positive signal flowing</li>
+                            <li>Sigmoid at output converted to probability</li>
+                            <li>Network learned non-linear transformation!</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
