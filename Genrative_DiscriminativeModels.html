@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative vs Discriminative Models</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+        }
+        h2 {
+            color: #764ba2;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        h3 {
+            color: #34495e;
+            margin: 20px 0 15px 0;
+        }
+        .concept-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .model-card {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+        }
+        .generative-card {
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);
+        }
+        .generative-card::before {
+            background: linear-gradient(90deg, #03a9f4, #00bcd4);
+        }
+        .discriminative-card {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+        }
+        .discriminative-card::before {
+            background: linear-gradient(90deg, #ff9800, #ff6f00);
+        }
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .model-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .icon {
+            font-size: 1.5em;
+        }
+        .formula-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 5px solid #667eea;
+            font-family: 'Courier New', monospace;
+        }
+        .example-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .interactive-demo {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            background: white;
+        }
+        .comparison-table tr:hover td {
+            background: #f8f9fa;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .pro {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .con {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .use-case-card {
+            padding: 20px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .use-case-card:hover {
+            transform: scale(1.05);
+        }
+        .visual-example {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .visual-box {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 200px;
+        }
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            margin: 0 20px;
+        }
+        #dataPoints {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 100px;
+        }
+        .data-point {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .class-a {
+            background: #3498db;
+            color: white;
+        }
+        .class-b {
+            background: #e74c3c;
+            color: white;
+        }
+        .generated {
+            background: #2ecc71;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .modern-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .modern-card {
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .quiz-section {
+            background: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .quiz-question {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .answer {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 10px;
+            border-left: 5px solid #27ae60;
+        }
+        .info-box {
+            background: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Generative vs Discriminative Models</h1>
+        <p class="subtitle">Understanding the Two Fundamental Approaches to Machine Learning</p>
+
+        <h2>🎯 The Core Difference - A Restaurant Analogy</h2>
+        <div class="example-container">
+            <h3>Imagine Two Types of Food Critics:</h3>
+            
+            <div class="concept-grid">
+                <div class="model-card generative-card">
+                    <h3><span class="icon">👨‍🍳</span> The Chef Critic (Generative)</h3>
+                    <p><strong>Approach:</strong> Learns how to make Italian and Chinese food</p>
+                    <ul>
+                        <li>Understands ingredients, cooking techniques, cultural context</li>
+                        <li>Can create new authentic dishes</li>
+                        <li>Can tell you: "This is how Italian food is made"</li>
+                        <li>Can generate new recipes that taste Italian</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><em>"I know HOW each cuisine is created"</em></p>
+                </div>
+                
+                <div class="model-card discriminative-card">
+                    <h3><span class="icon">👅</span> The Taste Tester (Discriminative)</h3>
+                    <p><strong>Approach:</strong> Learns to distinguish Italian from Chinese food</p>
+                    <ul>
+                        <li>Focuses on differences: pasta vs noodles, tomato vs soy sauce</li>
+                        <li>Expert at classification but can't cook</li>
+                        <li>Can tell you: "This dish is Italian, not Chinese"</li>
+                        <li>Cannot create new dishes</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><em>"I know the BOUNDARY between cuisines"</em></p>
+                </div>
+            </div>
+        </div>
+
+        <h2>📊 Mathematical Foundation</h2>
+        <div class="concept-grid">
+            <div class="model-card generative-card">
+                <h3>🎲 Generative Models</h3>
+                <div class="formula-box">
+                    <strong>Learn:</strong> P(X, Y) = P(X|Y) × P(Y)<br>
+                    <strong>Joint probability</strong> of data and labels<br><br>
+                    Can compute:<br>
+                    • P(Y|X) using Bayes' theorem<br>
+                    • P(X) by marginalizing over Y<br>
+                    • Generate new X samples
+                </div>
+                <p><strong>Question it answers:</strong></p>
+                <p>"What's the probability of seeing this email content AND it being spam?"</p>
+            </div>
+            
+            <div class="model-card discriminative-card">
+                <h3>🎯 Discriminative Models</h3>
+                <div class="formula-box">
+                    <strong>Learn:</strong> P(Y|X) directly<br>
+                    <strong>Conditional probability</strong> of label given data<br><br>
+                    Focus on:<br>
+                    • Decision boundary<br>
+                    • Classification/regression<br>
+                    • Cannot generate new samples
+                </div>
+                <p><strong>Question it answers:</strong></p>
+                <p>"Given this email content, what's the probability it's spam?"</p>
+            </div>
+        </div>
+
+        <h2>🌟 Real-World Example: Cat vs Dog Classifier</h2>
+        <div class="interactive-demo">
+            <h3>Interactive Visualization</h3>
+            
+            <div class="visual-example">
+                <div class="visual-box generative-card">
+                    <h4>Generative Approach</h4>
+                    <p>Learns:</p>
+                    <ul style="text-align: left;">
+                        <li>How cats look (fur patterns, ear shape)</li>
+                        <li>How dogs look (snout shape, tail)</li>
+                        <li>Can generate new cat/dog images</li>
+                    </ul>
+                </div>
+                
+                <span class="arrow">→</span>
+                
+                <div class="visual-box discriminative-card">
+                    <h4>Discriminative Approach</h4>
+                    <p>Learns:</p>
+                    <ul style="text-align: left;">
+                        <li>Cats have pointy ears, dogs don't</li>
+                        <li>Dogs have longer snouts</li>
+                        <li>Just the differences that matter</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="showGenerativeProcess()">Show Generative Process</button>
+                <button onclick="showDiscriminativeProcess()">Show Discriminative Process</button>
+            </div>
+            
+            <div id="dataPoints"></div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="modelChart"></canvas>
+        </div>
+
+        <h2>📋 Comprehensive Comparison</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Generative Models</th>
+                    <th>Discriminative Models</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>What they learn</strong></td>
+                    <td>P(X,Y) - Joint distribution</td>
+                    <td>P(Y|X) - Conditional distribution</td>
+                </tr>
+                <tr>
+                    <td><strong>Can generate new data?</strong></td>
+                    <td><span class="pro">✅ Yes</span></td>
+                    <td><span class="con">❌ No</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Training data needed</strong></td>
+                    <td><span class="con">More data required</span></td>
+                    <td><span class="pro">Less data needed</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Computational cost</strong></td>
+                    <td><span class="con">Higher</span></td>
+                    <td><span class="pro">Lower</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Outlier detection</strong></td>
+                    <td><span class="pro">Excellent</span></td>
+                    <td><span class="con">Limited</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Missing data handling</strong></td>
+                    <td><span class="pro">Natural handling</span></td>
+                    <td><span class="con">Requires preprocessing</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Classification accuracy</strong></td>
+                    <td>Good with enough data</td>
+                    <td><span class="pro">Generally better</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Interpretability</strong></td>
+                    <td><span class="pro">More interpretable</span></td>
+                    <td>Varies by model</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🚀 Classic Examples</h2>
+        <div class="concept-grid">
+            <div class="example-container">
+                <h3>📧 Generative: Naive Bayes for Spam Detection</h3>
+                <p><strong>How it works:</strong></p>
+                <ol>
+                    <li>Learns word distributions in spam emails: P(words|spam)</li>
+                    <li>Learns word distributions in ham emails: P(words|ham)</li>
+                    <li>Learns overall spam probability: P(spam)</li>
+                    <li>Can generate "typical" spam or ham emails</li>
+                </ol>
+                <div class="formula-box">
+                    P(spam|email) = P(email|spam) × P(spam) / P(email)
+                </div>
+            </div>
+            
+            <div class="example-container">
+                <h3>📈 Discriminative: Logistic Regression</h3>
+                <p><strong>How it works:</strong></p>
+                <ol>
+                    <li>Directly models P(spam|email features)</li>
+                    <li>Learns weights for each feature</li>
+                    <li>Finds optimal decision boundary</li>
+                    <li>Cannot generate new emails</li>
+                </ol>
+                <div class="formula-box">
+                    P(Y=1|X) = 1 / (1 + e^(-w^T x))
+                </div>
+            </div>
+        </div>
+
+        <h2>🎨 Modern Examples - The AI Revolution</h2>
+        <div class="modern-examples">
+            <div class="modern-card">
+                <h3>🎨 Generative AI Stars</h3>
+                <ul>
+                    <li><strong>GPT-4:</strong> Generates human-like text</li>
+                    <li><strong>DALL-E:</strong> Creates images from text</li>
+                    <li><strong>Stable Diffusion:</strong> Image generation</li>
+                    <li><strong>VAEs:</strong> Variational Autoencoders</li>
+                    <li><strong>GANs:</strong> Generative Adversarial Networks</li>
+                </ul>
+                <p style="margin-top: 15px;"><em>These models understand "how data is created"</em></p>
+            </div>
+            
+            <div class="modern-card">
+                <h3>🎯 Discriminative Powerhouses</h3>
+                <ul>
+                    <li><strong>BERT:</strong> Text classification</li>
+                    <li><strong>ResNet:</strong> Image classification</li>
+                    <li><strong>YOLOv8:</strong> Object detection</li>
+                    <li><strong>Random Forests:</strong> General classification</li>
+                    <li><strong>SVMs:</strong> Support Vector Machines</li>
+                </ul>
+                <p style="margin-top: 15px;"><em>These models excel at "drawing boundaries"</em></p>
+            </div>
+        </div>
+
+        <h2>🎯 When to Use Which?</h2>
+        <div class="use-case-grid">
+            <div class="use-case-card generative-card">
+                <h3>Use Generative When:</h3>
+                <ul>
+                    <li>Need to generate new samples</li>
+                    <li>Want to detect anomalies/outliers</li>
+                    <li>Have missing data to impute</li>
+                    <li>Need to understand data distribution</li>
+                    <li>Want model interpretability</li>
+                    <li>Building creative AI applications</li>
+                </ul>
+            </div>
+            
+            <div class="use-case-card discriminative-card">
+                <h3>Use Discriminative When:</h3>
+                <ul>
+                    <li>Only need classification/regression</li>
+                    <li>Have limited training data</li>
+                    <li>Need fast training and inference</li>
+                    <li>Want best accuracy for prediction</li>
+                    <li>Don't need data generation</li>
+                    <li>Building prediction systems</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>💡 Key Insights</h2>
+        <div class="info-box">
+            <h3>The Fundamental Trade-off</h3>
+            <p><strong>Generative models</strong> solve a harder problem (modeling P(X,Y)) which gives them more capabilities but requires more resources.</p>
+            <p><strong>Discriminative models</strong> solve an easier problem (modeling P(Y|X)) which makes them more efficient but less versatile.</p>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Common Misconception</h3>
+            <p>Generative models aren't always worse at classification! With enough data, they can match discriminative models while offering additional capabilities like generation and outlier detection.</p>
+        </div>
+
+        <h2>🧪 Test Your Understanding</h2>
+        <div class="quiz-section">
+            <div class="quiz-question">
+                <h4>Q1: Which type of model would you use to create deepfakes?</h4>
+                <button onclick="toggleAnswer('answer1')">Show Answer</button>
+                <div id="answer1" class="answer">
+                    <strong>Generative Model (specifically GANs)</strong><br>
+                    Deepfakes require generating new, realistic images/videos, which is only possible with generative models that understand how faces are constructed.
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <h4>Q2: You're building a credit card fraud detector with limited data. Which approach is better?</h4>
+                <button onclick="toggleAnswer('answer2')">Show Answer</button>
+                <div id="answer2" class="answer">
+                    <strong>Discriminative Model</strong><br>
+                    With limited data, discriminative models (like Random Forest or XGBoost) will generally perform better as they focus only on the decision boundary rather than modeling the entire data distribution.
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <h4>Q3: Can a generative model be used for classification?</h4>
+                <button onclick="toggleAnswer('answer3')">Show Answer</button>
+                <div id="answer3" class="answer">
+                    <strong>Yes!</strong><br>
+                    Generative models can classify by using Bayes' rule: P(Y|X) = P(X|Y)P(Y)/P(X). They learn P(X|Y) and P(Y), then compute P(Y|X) for classification.
+                </div>
+            </div>
+        </div>
+
+        <h2>🚀 Cutting-Edge Hybrid Approaches</h2>
+        <div class="example-container">
+            <h3>The Best of Both Worlds</h3>
+            <p>Modern research explores hybrid approaches:</p>
+            <ul>
+                <li><strong>Semi-supervised learning:</strong> Use generative models to create synthetic training data, then train discriminative models</li>
+                <li><strong>Adversarial training:</strong> GANs use both generative (generator) and discriminative (discriminator) components</li>
+                <li><strong>Energy-based models:</strong> Bridge between generative and discriminative approaches</li>
+                <li><strong>Flow-based models:</strong> Tractable generative models with discriminative performance</li>
+            </ul>
+        </div>
+
+        <h2>📚 Summary</h2>
+        <div class="example-container">
+            <p><strong>Remember this simple analogy:</strong></p>
+            <ul>
+                <li>🎨 <strong>Generative = Artist:</strong> Can create new paintings and tell if something is their style</li>
+                <li>🔍 <strong>Discriminative = Art Critic:</strong> Can't paint but excellent at identifying styles</li>
+            </ul>
+            
+            <p style="margin-top: 20px;"><strong>Choose based on your needs:</strong></p>
+            <ul>
+                <li>Need to create? → Generative</li>
+                <li>Just need to classify? → Discriminative</li>
+                <li>Have lots of data? → Either works</li>
+                <li>Limited data? → Discriminative usually wins</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Initialize chart
+        const ctx = document.getElementById('modelChart').getContext('2d');
+        let modelChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Class A (e.g., Cats)',
+                        data: generateClusterData(30, -2, -2, 1.5),
+                        backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Class B (e.g., Dogs)',
+                        data: generateClusterData(30, 2, 2, 1.5),
+                        backgroundColor: 'rgba(231, 76, 60, 0.6)',
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        pointRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Data Distribution Visualization',
+                        font: { size: 16 }
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Feature 1 (e.g., Ear Shape)'
+                        },
+                        min: -6,
+                        max: 6
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Feature 2 (e.g., Snout Length)'
+                        },
+                        min: -6,
+                        max: 6
+                    }
+                }
+            }
+        });
+
+        function generateClusterData(n, centerX, centerY, spread) {
+            const data = [];
+            for (let i = 0; i < n; i++) {
+                data.push({
+                    x: centerX + (Math.random() - 0.5) * spread * 2,
+                    y: centerY + (Math.random() - 0.5) * spread * 2
+                });
+            }
+            return data;
+        }
+
+        function showGenerativeProcess() {
+            const dataPoints = document.getElementById('dataPoints');
+            dataPoints.innerHTML = '<h4>🎨 Generative Model Process:</h4>';
+            
+            // Show understanding of each class distribution
+            setTimeout(() => {
+                dataPoints.innerHTML += '<p>1️⃣ Learning Class A distribution...</p>';
+                dataPoints.innerHTML += '<div class="data-point class-a">Mean: (-2, -2)</div>';
+                dataPoints.innerHTML += '<div class="data-point class-a">Variance: 1.5</div>';
+            }, 500);
+            
+            setTimeout(() => {
+                dataPoints.innerHTML += '<p>2️⃣ Learning Class B distribution...</p>';
+                dataPoints.innerHTML += '<div class="data-point class-b">Mean: (2, 2)</div>';
+                dataPoints.innerHTML += '<div class="data-point class-b">Variance: 1.5</div>';
+            }, 1500);
+            
+            setTimeout(() => {
+                dataPoints.innerHTML += '<p>3️⃣ Can now generate new samples!</p>';
+                for (let i = 0; i < 5; i++) {
+                    dataPoints.innerHTML += '<div class="data-point generated">New Cat 🐱</div>';
+                }
+                for (let i = 0; i < 5; i++) {
+                    dataPoints.innerHTML += '<div class="data-point generated">New Dog 🐕</div>';
+                }
+            }, 2500);
+            
+            // Add generated points to chart
+            setTimeout(() => {
+                modelChart.data.datasets.push({
+                    label: 'Generated Samples',
+                    data: [
+                        ...generateClusterData(5, -2, -2, 1.5),
+                        ...generateClusterData(5, 2, 2, 1.5)
+                    ],
+                    backgroundColor: 'rgba(46, 204, 113, 0.6)',
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    pointRadius: 8,
+                    pointStyle: 'star'
+                });
+                modelChart.update();
+            }, 3000);
+        }
+
+        function showDiscriminativeProcess() {
+            const dataPoints = document.getElementById('dataPoints');
+            dataPoints.innerHTML = '<h4>🎯 Discriminative Model Process:</h4>';
+            
+            setTimeout(() => {
+                dataPoints.innerHTML += '<p>1️⃣ Finding decision boundary...</p>';
+                dataPoints.innerHTML += '<div class="data-point">Analyzing differences between classes</div>';
+            }, 500);
+            
+            setTimeout(() => {
+                dataPoints.innerHTML += '<p>2️⃣ Learning classification rule...</p>';
+                dataPoints.innerHTML += '<div class="data-point">If x + y < 0 → Class A (Cat)</div>';
+                dataPoints.innerHTML += '<div class="data-point">If x + y > 0 → Class B (Dog)</div>';
+            }, 1500);
+            
+            setTimeout(() => {
+                dataPoints.innerHTML += '<p>3️⃣ Ready to classify (but cannot generate new samples)</p>';
+                dataPoints.innerHTML += '<div class="data-point">Input: (1, 2) → Prediction: Dog 🐕</div>';
+                dataPoints.innerHTML += '<div class="data-point">Input: (-3, -1) → Prediction: Cat 🐱</div>';
+            }, 2500);
+            
+            // Add decision boundary to chart
+            setTimeout(() => {
+                // Remove generated samples if they exist
+                if (modelChart.data.datasets.length > 2) {
+                    modelChart.data.datasets.pop();
+                }
+                
+                // Add decision boundary line
+                modelChart.data.datasets.push({
+                    label: 'Decision Boundary',
+                    data: [
+                        {x: -6, y: 6},
+                        {x: 6, y: -6}
+                    ],
+                    type: 'line',
+                    borderColor: 'rgba(155, 89, 182, 1)',
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0
+                });
+                modelChart.update();
+            }, 3000);
+        }
+
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            if (answer.style.display === 'none' || answer.style.display === '') {
+                answer.style.display = 'block';
+            } else {
+                answer.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
