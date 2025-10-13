@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayesian Concepts Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .concepts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .concept-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .concept-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .concept-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .inference-title {
+            color: #667eea;
+        }
+        
+        .optimization-title {
+            color: #f093fb;
+        }
+        
+        .icon {
+            font-size: 1.2em;
+        }
+        
+        .demo-area {
+            background: #f7f9fc;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.2s;
+            margin: 10px 5px;
+        }
+        
+        .button:hover {
+            transform: scale(1.05);
+        }
+        
+        .button:active {
+            transform: scale(0.95);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        canvas {
+            border-radius: 10px;
+            background: white;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .comparison-table {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        
+        .result-text {
+            font-size: 1.1em;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 8px;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Bayesian Inference vs Bayesian Optimization</h1>
+        
+        <div class="concepts-grid">
+            <!-- Bayesian Inference Card -->
+            <div class="concept-card">
+                <h2 class="concept-title inference-title">
+                    <span class="icon">🔍</span> Bayesian Inference
+                </h2>
+                <p><strong>Think of it as:</strong> A Medical Diagnosis System</p>
+                <div class="highlight">
+                    <strong>Goal:</strong> Update beliefs based on evidence<br>
+                    <strong>Question:</strong> "What's probably true?"
+                </div>
+                
+                <div class="demo-area">
+                    <h3>Interactive Demo: Disease Diagnosis</h3>
+                    <p>Patient symptoms: <span id="symptoms">None selected</span></p>
+                    
+                    <button class="button" onclick="addSymptom('fever')">Add Fever 🌡️</button>
+                    <button class="button" onclick="addSymptom('cough')">Add Cough 🤧</button>
+                    <button class="button" onclick="addSymptom('fatigue')">Add Fatigue 😴</button>
+                    <button class="button" onclick="resetSymptoms()">Reset</button>
+                    
+                    <div style="margin-top: 20px;">
+                        <p><strong>Probability of Flu:</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="flu-prob" style="width: 20%;">20%</div>
+                        </div>
+                        
+                        <p><strong>Probability of Cold:</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cold-prob" style="width: 30%; background: linear-gradient(90deg, #4CAF50, #8BC34A);">30%</div>
+                        </div>
+                        
+                        <p><strong>Probability of Healthy:</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="healthy-prob" style="width: 50%; background: linear-gradient(90deg, #FF9800, #FFC107);">50%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="result-text">
+                    <span class="emoji">💡</span> 
+                    <strong>Key Insight:</strong> We're not searching for anything - we're updating our beliefs about what condition the patient has based on symptoms.
+                </p>
+            </div>
+            
+            <!-- Bayesian Optimization Card -->
+            <div class="concept-card">
+                <h2 class="concept-title optimization-title">
+                    <span class="icon">🎯</span> Bayesian Optimization
+                </h2>
+                <p><strong>Think of it as:</strong> Finding Perfect Coffee Temperature</p>
+                <div class="highlight">
+                    <strong>Goal:</strong> Find the best value efficiently<br>
+                    <strong>Question:</strong> "What's the optimal choice?"
+                </div>
+                
+                <div class="demo-area">
+                    <h3>Interactive Demo: Coffee Temperature Optimizer</h3>
+                    <canvas id="optCanvas" width="500" height="250"></canvas>
+                    <button class="button" onclick="runOptimizationStep()">Try Next Temperature ☕</button>
+                    <button class="button" onclick="resetOptimization()">Reset</button>
+                    
+                    <div id="opt-results" style="margin-top: 15px;">
+                        <p><strong>Trials:</strong> <span id="trials">0</span></p>
+                        <p><strong>Best Temperature Found:</strong> <span id="best-temp">Not tested yet</span></p>
+                        <p><strong>Best Taste Score:</strong> <span id="best-score">0/10</span></p>
+                    </div>
+                </div>
+                
+                <p class="result-text">
+                    <span class="emoji">🎯</span>
+                    <strong>Key Insight:</strong> We're actively searching for the temperature that gives the best taste, using past results to guide where to test next.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Comparison Table -->
+        <div class="comparison-table">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📊 Side-by-Side Comparison</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Bayesian Inference</th>
+                        <th>Bayesian Optimization</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Primary Goal</strong></td>
+                        <td>Update beliefs about unknowns</td>
+                        <td>Find optimal values</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Real-World Example</strong></td>
+                        <td>🏥 Medical diagnosis<br>🌦️ Weather prediction<br>📧 Spam filtering</td>
+                        <td>🔬 Drug discovery<br>🏭 Factory settings<br>🤖 Hyperparameter tuning</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Process</strong></td>
+                        <td>Passive: Observe → Update</td>
+                        <td>Active: Test → Learn → Choose next test</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Output</strong></td>
+                        <td>Probability distributions</td>
+                        <td>Optimal parameter values</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Key Question</strong></td>
+                        <td>"How likely is X given what I've seen?"</td>
+                        <td>"Where should I look next to find the best?"</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // Bayesian Inference Demo
+        let symptoms = new Set();
+        
+        function addSymptom(symptom) {
+            symptoms.add(symptom);
+            updateDiagnosis();
+        }
+        
+        function resetSymptoms() {
+            symptoms.clear();
+            updateDiagnosis();
+        }
+        
+        function updateDiagnosis() {
+            let fluProb = 20;
+            let coldProb = 30;
+            let healthyProb = 50;
+            
+            // Update probabilities based on symptoms (simplified Bayesian update)
+            if (symptoms.has('fever')) {
+                fluProb += 30;
+                coldProb += 10;
+                healthyProb -= 40;
+            }
+            if (symptoms.has('cough')) {
+                fluProb += 20;
+                coldProb += 25;
+                healthyProb -= 45;
+            }
+            if (symptoms.has('fatigue')) {
+                fluProb += 15;
+                coldProb += 10;
+                healthyProb -= 25;
+            }
+            
+            // Normalize
+            let total = fluProb + coldProb + healthyProb;
+            fluProb = Math.max(0, Math.min(100, (fluProb / total) * 100));
+            coldProb = Math.max(0, Math.min(100, (coldProb / total) * 100));
+            healthyProb = Math.max(0, Math.min(100, (healthyProb / total) * 100));
+            
+            // Update display
+            document.getElementById('symptoms').textContent = 
+                symptoms.size > 0 ? Array.from(symptoms).join(', ') : 'None selected';
+            
+            document.getElementById('flu-prob').style.width = fluProb + '%';
+            document.getElementById('flu-prob').textContent = Math.round(fluProb) + '%';
+            
+            document.getElementById('cold-prob').style.width = coldProb + '%';
+            document.getElementById('cold-prob').textContent = Math.round(coldProb) + '%';
+            
+            document.getElementById('healthy-prob').style.width = healthyProb + '%';
+            document.getElementById('healthy-prob').textContent = Math.round(healthyProb) + '%';
+        }
+        
+        // Bayesian Optimization Demo
+        const canvas = document.getElementById('optCanvas');
+        const ctx = canvas.getContext('2d');
+        let trials = [];
+        let trialCount = 0;
+        
+        // True function (unknown to the optimizer)
+        function trueTasteFunction(temp) {
+            // Peak at 92°C
+            return 10 * Math.exp(-Math.pow((temp - 92) / 10, 2));
+        }
+        
+        function drawOptimizationChart() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(40, 210);
+            ctx.lineTo(460, 210);
+            ctx.moveTo(40, 210);
+            ctx.lineTo(40, 30);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('Temperature (°C)', 200, 240);
+            ctx.save();
+            ctx.translate(15, 120);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Taste Score', 0, 0);
+            ctx.restore();
+            
+            // Draw true function (hidden in reality)
+            ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let temp = 70; temp <= 100; temp += 0.5) {
+                let x = 40 + (temp - 70) * 14;
+                let y = 210 - trueTasteFunction(temp) * 18;
+                if (temp === 70) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Draw sampled points
+            trials.forEach(trial => {
+                let x = 40 + (trial.temp - 70) * 14;
+                let y = 210 - trial.score * 18;
+                
+                ctx.fillStyle = '#667eea';
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Label
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.fillText(trial.temp + '°C', x - 15, y - 10);
+            });
+            
+            // Draw uncertainty/exploration area for next point
+            if (trials.length > 0 && trials.length < 6) {
+                let nextTemp = getNextTemp();
+                let x = 40 + (nextTemp - 70) * 14;
+                
+                ctx.fillStyle = 'rgba(240, 147, 251, 0.3)';
+                ctx.fillRect(x - 20, 30, 40, 180);
+                
+                ctx.strokeStyle = '#f093fb';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(x, 30);
+                ctx.lineTo(x, 210);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = '#f093fb';
+                ctx.font = '11px Arial';
+                ctx.fillText('Next?', x - 15, 25);
+            }
+        }
+        
+        function getNextTemp() {
+            if (trials.length === 0) return 85;
+            if (trials.length === 1) return 95;
+            if (trials.length === 2) return 90;
+            if (trials.length === 3) return 92;
+            if (trials.length === 4) return 93;
+            return 91;
+        }
+        
+        function runOptimizationStep() {
+            if (trials.length >= 6) {
+                alert('Optimization complete! Best temperature found.');
+                return;
+            }
+            
+            let temp = getNextTemp();
+            let score = trueTasteFunction(temp) + (Math.random() - 0.5) * 0.5; // Add noise
+            score = Math.max(0, Math.min(10, score));
+            
+            trials.push({ temp, score });
+            trialCount++;
+            
+            // Update display
+            document.getElementById('trials').textContent = trialCount;
+            
+            let bestTrial = trials.reduce((best, trial) => 
+                trial.score > best.score ? trial : best, trials[0]);
+            
+            document.getElementById('best-temp').textContent = bestTrial.temp + '°C';
+            document.getElementById('best-score').textContent = bestTrial.score.toFixed(1) + '/10';
+            
+            drawOptimizationChart();
+        }
+        
+        function resetOptimization() {
+            trials = [];
+            trialCount = 0;
+            document.getElementById('trials').textContent = '0';
+            document.getElementById('best-temp').textContent = 'Not tested yet';
+            document.getElementById('best-score').textContent = '0/10';
+            drawOptimizationChart();
+        }
+        
+        // Initialize
+        updateDiagnosis();
+        drawOptimizationChart();
+    </script>
+</body>
+</html>
