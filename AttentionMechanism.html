@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention Mechanism Explained</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        h2 {
+            color: #764ba2;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        h3 {
+            color: #34495e;
+            margin: 20px 0 15px 0;
+        }
+        .story-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .classroom-demo {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .translation-demo {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .word-box {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .word-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .highlighted {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.1);
+        }
+        .attention-weight {
+            position: absolute;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            top: -25px;
+        }
+        .qkv-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .qkv-box {
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .query-box {
+            background: linear-gradient(135deg, #f8b739, #f5576c);
+            color: white;
+        }
+        .key-box {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+        .value-box {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+        }
+        .attention-matrix {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        .matrix-cell {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .matrix-cell:hover {
+            transform: scale(1.1);
+        }
+        .info-box {
+            background: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success-box {
+            background: #d4edda;
+            border-left: 5px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .interactive-translation {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .sentence-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            position: relative;
+        }
+        .attention-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform-origin: left center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .attention-line.active {
+            opacity: 0.7;
+        }
+        .visual-example {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .student-icon {
+            font-size: 2em;
+            margin: 10px;
+        }
+        .focus-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+        .high-attention {
+            background: #27ae60;
+        }
+        .medium-attention {
+            background: #f39c12;
+        }
+        .low-attention {
+            background: #e74c3c;
+        }
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .flow-box {
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 150px;
+        }
+        .arrow-right {
+            font-size: 2em;
+            color: #667eea;
+        }
+        .highlight {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .comparison-card {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .without-attention {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        }
+        .with-attention {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👀 The Attention Mechanism</h1>
+        <p class="subtitle">Teaching Neural Networks to Focus on What Matters</p>
+
+        <div class="story-box">
+            <h2 style="color: white; border: none;">📚 The Classroom Story</h2>
+            <p>Imagine you're a student (decoder) trying to answer a question about a long lecture (encoder output). Without attention, you'd have to remember the ENTIRE lecture as one blob of information. That's hard!</p>
+            <p style="margin-top: 15px;">With attention, you can <strong>"look back"</strong> at specific parts of the lecture notes whenever you need them. When answering about "photosynthesis," you focus on the biology part, not the math part.</p>
+            <p style="margin-top: 15px;"><strong>This is exactly what attention does in neural networks!</strong> It allows the model to focus on relevant parts of the input when making decisions.</p>
+        </div>
+
+        <h2>🎯 The Problem Attention Solves</h2>
+        <div class="comparison-grid">
+            <div class="comparison-card without-attention">
+                <h3>❌ Without Attention</h3>
+                <p><strong>The Bottleneck Problem:</strong></p>
+                <ul>
+                    <li>Entire input compressed into one vector</li>
+                    <li>Information gets lost (especially long sequences)</li>
+                    <li>Can't focus on specific parts</li>
+                </ul>
+                <div style="text-align: center; margin-top: 20px;">
+                    <p>Long Sentence → 😵 → Single Vector → Poor Translation</p>
+                </div>
+            </div>
+            
+            <div class="comparison-card with-attention">
+                <h3>✅ With Attention</h3>
+                <p><strong>The Smart Solution:</strong></p>
+                <ul>
+                    <li>Access all input positions</li>
+                    <li>Dynamically focus on relevant parts</li>
+                    <li>Different focus for each output word</li>
+                </ul>
+                <div style="text-align: center; margin-top: 20px;">
+                    <p>Long Sentence → 🎯 → Focused Access → Great Translation</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>🎬 Real Example: Translation</h2>
+        <div class="translation-demo">
+            <h3>Translating "The cat sits on the mat" to French</h3>
+            <p>Watch how attention focuses on different words when translating:</p>
+            
+            <div class="interactive-translation">
+                <div style="text-align: center;">
+                    <h4>English (Source)</h4>
+                    <div id="sourceWords">
+                        <span class="word-box" data-word="0">The</span>
+                        <span class="word-box" data-word="1">cat</span>
+                        <span class="word-box" data-word="2">sits</span>
+                        <span class="word-box" data-word="3">on</span>
+                        <span class="word-box" data-word="4">the</span>
+                        <span class="word-box" data-word="5">mat</span>
+                    </div>
+                    
+                    <div style="margin: 30px 0;">
+                        <button onclick="showAttentionForWord(0)">Generate "Le"</button>
+                        <button onclick="showAttentionForWord(1)">Generate "chat"</button>
+                        <button onclick="showAttentionForWord(2)">Generate "est assis"</button>
+                        <button onclick="showAttentionForWord(3)">Generate "sur"</button>
+                        <button onclick="showAttentionForWord(4)">Generate "le"</button>
+                        <button onclick="showAttentionForWord(5)">Generate "tapis"</button>
+                    </div>
+                    
+                    <h4>French (Target)</h4>
+                    <div id="targetWords">
+                        <span class="word-box" id="target-0">Le</span>
+                        <span class="word-box" id="target-1">chat</span>
+                        <span class="word-box" id="target-2">est assis</span>
+                        <span class="word-box" id="target-3">sur</span>
+                        <span class="word-box" id="target-4">le</span>
+                        <span class="word-box" id="target-5">tapis</span>
+                    </div>
+                </div>
+                
+                <div id="attentionExplanation" class="info-box" style="margin-top: 20px;">
+                    Click the buttons above to see how attention works for each word!
+                </div>
+            </div>
+        </div>
+
+        <h2>🔑 The Magic Trio: Query, Key, Value</h2>
+        <div class="classroom-demo">
+            <h3>The Library Analogy</h3>
+            <p>Imagine you're in a library looking for information:</p>
+            
+            <div class="qkv-container">
+                <div class="qkv-box query-box">
+                    <h4>🔍 Query</h4>
+                    <p><strong>"What am I looking for?"</strong></p>
+                    <p>Your question or search term</p>
+                    <p style="margin-top: 10px;"><em>Example: "Books about cooking"</em></p>
+                </div>
+                
+                <div class="qkv-box key-box">
+                    <h4>🏷️ Key</h4>
+                    <p><strong>"What's this about?"</strong></p>
+                    <p>Labels on each book</p>
+                    <p style="margin-top: 10px;"><em>Example: Book titles/topics</em></p>
+                </div>
+                
+                <div class="qkv-box value-box">
+                    <h4>📚 Value</h4>
+                    <p><strong>"The actual content"</strong></p>
+                    <p>The information inside</p>
+                    <p style="margin-top: 10px;"><em>Example: Book contents</em></p>
+                </div>
+            </div>
+            
+            <div class="flow-diagram">
+                <div class="flow-box">
+                    <strong>1. Compare</strong><br>
+                    Query × Key<br>
+                    <small>"How relevant?"</small>
+                </div>
+                <span class="arrow-right">→</span>
+                <div class="flow-box">
+                    <strong>2. Score</strong><br>
+                    Attention Weights<br>
+                    <small>"Importance scores"</small>
+                </div>
+                <span class="arrow-right">→</span>
+                <div class="flow-box">
+                    <strong>3. Focus</strong><br>
+                    Weighted Values<br>
+                    <small>"Get relevant info"</small>
+                </div>
+            </div>
+        </div>
+
+        <h2>🧮 How Attention Scores Are Calculated</h2>
+        <div class="visual-example">
+            <h3>Step-by-Step Process</h3>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('step1')">Step 1: Compute Scores</button>
+                <button class="tab" onclick="showTab('step2')">Step 2: Apply Softmax</button>
+                <button class="tab" onclick="showTab('step3')">Step 3: Weight Values</button>
+                <button class="tab" onclick="showTab('step4')">Step 4: Sum Output</button>
+            </div>
+            
+            <div id="step1" class="tab-content active">
+                <h4>Step 1: Compute Attention Scores</h4>
+                <p>For each word we want to translate, we ask: "How relevant is each source word?"</p>
+                <div class="formula-box" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    Score = Query · Key (dot product)<br>
+                    Higher score = More relevant
+                </div>
+                <div class="attention-matrix">
+                    <div class="matrix-cell">The: 0.2</div>
+                    <div class="matrix-cell" style="background: #e8f5e9;">cat: 0.8</div>
+                    <div class="matrix-cell">sits: 0.3</div>
+                    <div class="matrix-cell">on: 0.1</div>
+                    <div class="matrix-cell">mat: 0.2</div>
+                </div>
+                <p style="text-align: center;"><em>Scores for generating "chat" (cat)</em></p>
+            </div>
+            
+            <div id="step2" class="tab-content">
+                <h4>Step 2: Apply Softmax (Normalize)</h4>
+                <p>Convert scores to probabilities (must sum to 1):</p>
+                <div class="formula-box" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    Attention Weight = softmax(Score)<br>
+                    All weights sum to 1.0
+                </div>
+                <div class="attention-matrix">
+                    <div class="matrix-cell">The: 10%</div>
+                    <div class="matrix-cell" style="background: #4caf50; color: white;">cat: 45%</div>
+                    <div class="matrix-cell">sits: 20%</div>
+                    <div class="matrix-cell">on: 5%</div>
+                    <div class="matrix-cell">mat: 20%</div>
+                </div>
+                <p style="text-align: center;"><em>Normalized attention weights</em></p>
+            </div>
+            
+            <div id="step3" class="tab-content">
+                <h4>Step 3: Weight the Values</h4>
+                <p>Multiply each value by its attention weight:</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <p>Value("cat") × 0.45 = Large contribution</p>
+                    <p>Value("The") × 0.10 = Small contribution</p>
+                    <p>Value("on") × 0.05 = Tiny contribution</p>
+                </div>
+            </div>
+            
+            <div id="step4" class="tab-content">
+                <h4>Step 4: Sum Weighted Values</h4>
+                <p>Add all weighted values to get the final output:</p>
+                <div class="formula-box" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    Output = Σ(Attention Weight × Value)<br>
+                    = 0.45×V(cat) + 0.10×V(The) + ...
+                </div>
+                <div class="success-box">
+                    <strong>Result:</strong> The model focuses 45% on "cat" when generating "chat", which makes perfect sense!
+                </div>
+            </div>
+        </div>
+
+        <h2>🌟 Types of Attention</h2>
+        <div class="visual-example">
+            <h3>1. Encoder-Decoder Attention (Cross-Attention)</h3>
+            <p>Used in translation, image captioning</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <span class="student-icon">📖</span>
+                <span style="margin: 0 20px;">→</span>
+                <span class="student-icon">✍️</span>
+            </div>
+            <p>Decoder (writer) attends to Encoder (reader)</p>
+            
+            <h3 style="margin-top: 30px;">2. Self-Attention</h3>
+            <p>Used in BERT, GPT, Transformers</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <span class="student-icon">🤔</span>
+                <span style="margin: 0 20px;">↔️</span>
+                <span class="student-icon">🤔</span>
+            </div>
+            <p>Words attend to other words in the same sentence</p>
+            <div class="info-box">
+                <strong>Example:</strong> In "The cat sat on the mat because it was tired", self-attention helps "it" understand it refers to "cat".
+            </div>
+        </div>
+
+        <h2>💻 Code Implementation</h2>
+        <div class="code-block">
+import numpy as np
+import torch
+import torch.nn.functional as F
+
+def attention(query, key, value):
+    """
+    Simple attention mechanism
+    
+    Args:
+        query: [batch_size, seq_len_q, d_k]
+        key: [batch_size, seq_len_k, d_k]
+        value: [batch_size, seq_len_v, d_v]
+    """
+    # Step 1: Calculate scores (Q × K^T)
+    scores = torch.matmul(query, key.transpose(-2, -1))
+    
+    # Step 2: Scale scores (for stability)
+    d_k = query.size(-1)
+    scores = scores / np.sqrt(d_k)
+    
+    # Step 3: Apply softmax to get attention weights
+    attention_weights = F.softmax(scores, dim=-1)
+    
+    # Step 4: Apply weights to values
+    output = torch.matmul(attention_weights, value)
+    
+    return output, attention_weights
+
+# Example: Translating a word
+# Simulating "cat" attending to source sentence
+source_sentence = ["The", "cat", "sits", "on", "mat"]
+target_word = "chat"
+
+# Simulate embeddings (normally from embedding layer)
+query = torch.randn(1, 1, 64)  # Query for "chat"
+key = torch.randn(1, 5, 64)    # Keys for source words
+value = torch.randn(1, 5, 64)  # Values for source words
+
+# Apply attention
+output, weights = attention(query, key, value)
+
+print("Attention weights for generating 'chat':")
+for i, word in enumerate(source_sentence):
+    print(f"  {word}: {weights[0, 0, i]:.2%}")
+        </div>
+
+        <h2>🚀 Real-World Applications</h2>
+        <div class="visual-example">
+            <h3>1. Machine Translation (Google Translate)</h3>
+            <p>Attention helps align source and target languages perfectly</p>
+            
+            <h3>2. Image Captioning</h3>
+            <p>Model "looks" at relevant parts of image when generating each word</p>
+            
+            <h3>3. Question Answering (BERT)</h3>
+            <p>Finds relevant parts of text to answer questions</p>
+            
+            <h3>4. Text Summarization</h3>
+            <p>Focuses on important sentences to create summary</p>
+            
+            <h3>5. Speech Recognition</h3>
+            <p>Aligns audio features with text output</p>
+        </div>
+
+        <h2>🎯 Why Attention is Revolutionary</h2>
+        <div class="success-box">
+            <h3>Before Attention (RNN/LSTM Era)</h3>
+            <ul>
+                <li>Fixed-size bottleneck vector</li>
+                <li>Information loss in long sequences</li>
+                <li>Sequential processing (slow)</li>
+                <li>Poor long-range dependencies</li>
+            </ul>
+            
+            <h3 style="margin-top: 20px;">After Attention (Transformer Era)</h3>
+            <ul>
+                <li>Direct access to all positions</li>
+                <li>No information bottleneck</li>
+                <li>Parallel processing (fast)</li>
+                <li>Excellent long-range dependencies</li>
+                <li>Led to GPT, BERT, and modern AI</li>
+            </ul>
+        </div>
+
+        <h2>💡 Key Takeaways</h2>
+        <div class="info-box">
+            <h3>Remember These Points:</h3>
+            <ol>
+                <li><strong>Attention = Dynamic Focus:</strong> Like having a highlighter that automatically marks important parts</li>
+                <li><strong>Query-Key-Value:</strong> Question-Label-Content trinity</li>
+                <li><strong>Different for Each Output:</strong> Each word gets its own attention pattern</li>
+                <li><strong>Soft Selection:</strong> Not binary on/off, but weighted importance</li>
+                <li><strong>Foundation of Modern NLP:</strong> Powers ChatGPT, BERT, and more</li>
+            </ol>
+        </div>
+
+        <h2>🎮 Interactive Demo: Build Your Own Attention</h2>
+        <div class="interactive-translation">
+            <h3>Try It Yourself!</h3>
+            <p>Input a word and see how attention would focus:</p>
+            <div style="text-align: center;">
+                <input type="text" id="userInput" placeholder="Enter a word to translate" style="padding: 10px; border-radius: 10px; border: 2px solid #667eea; margin: 10px;">
+                <button onclick="simulateAttention()">Calculate Attention</button>
+            </div>
+            <div id="simulationResult"></div>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Common Misconceptions</h3>
+            <ul>
+                <li>Attention is NOT just for translation - it's used everywhere now</li>
+                <li>It doesn't "pay attention" like humans - it's mathematical weighting</li>
+                <li>Self-attention ≠ Cross-attention (different types for different tasks)</li>
+                <li>Attention alone isn't intelligence - it's one mechanism among many</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Show attention for different words
+        const attentionPatterns = {
+            0: [0.7, 0.1, 0.1, 0.05, 0.05, 0], // "Le" focuses on "The"
+            1: [0.1, 0.8, 0.05, 0.05, 0, 0], // "chat" focuses on "cat"
+            2: [0.05, 0.1, 0.7, 0.1, 0.05, 0], // "est assis" focuses on "sits"
+            3: [0.05, 0.05, 0.1, 0.7, 0.05, 0.05], // "sur" focuses on "on"
+            4: [0.1, 0, 0.05, 0.05, 0.7, 0.1], // "le" focuses on second "the"
+            5: [0, 0.05, 0.05, 0.1, 0.1, 0.7] // "tapis" focuses on "mat"
+        };
+
+        function showAttentionForWord(targetIndex) {
+            // Clear previous highlights
+            document.querySelectorAll('.word-box').forEach(box => {
+                box.classList.remove('highlighted');
+                box.style.opacity = '1';
+            });
+            
+            // Get attention weights
+            const weights = attentionPatterns[targetIndex];
+            const sourceWords = document.querySelectorAll('#sourceWords .word-box');
+            const targetWord = document.getElementById(`target-${targetIndex}`);
+            
+            // Highlight source words based on attention
+            sourceWords.forEach((word, index) => {
+                const weight = weights[index];
+                word.style.opacity = Math.max(0.3, weight);
+                word.style.transform = `scale(${0.8 + weight * 0.5})`;
+                if (weight > 0.5) {
+                    word.classList.add('highlighted');
+                }
+            });
+            
+            // Highlight target word
+            targetWord.classList.add('highlighted');
+            
+            // Update explanation
+            const explanations = [
+                "Generating 'Le': Strong attention on 'The' (70%) - direct translation of the article",
+                "Generating 'chat': Strong attention on 'cat' (80%) - direct translation of the noun",
+                "Generating 'est assis': Strong attention on 'sits' (70%) - translating the verb",
+                "Generating 'sur': Strong attention on 'on' (70%) - translating the preposition",
+                "Generating 'le': Strong attention on second 'the' (70%) - translating the second article",
+                "Generating 'tapis': Strong attention on 'mat' (70%) - translating the final noun"
+            ];
+            
+            document.getElementById('attentionExplanation').innerHTML = `
+                <strong>Current Focus:</strong> ${explanations[targetIndex]}<br>
+                <div style="margin-top: 10px;">
+                    Attention Weights: 
+                    ${sourceWords[0].textContent}: ${(weights[0]*100).toFixed(0)}% |
+                    ${sourceWords[1].textContent}: ${(weights[1]*100).toFixed(0)}% |
+                    ${sourceWords[2].textContent}: ${(weights[2]*100).toFixed(0)}% |
+                    ${sourceWords[3].textContent}: ${(weights[3]*100).toFixed(0)}% |
+                    ${sourceWords[4].textContent}: ${(weights[4]*100).toFixed(0)}% |
+                    ${sourceWords[5].textContent}: ${(weights[5]*100).toFixed(0)}%
+                </div>
+            `;
+        }
+
+        // Tab functionality
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Simulate attention calculation
+        function simulateAttention() {
+            const input = document.getElementById('userInput').value;
+            const result = document.getElementById('simulationResult');
+            
+            if (!input) {
+                result.innerHTML = '<p style="color: red;">Please enter a word!</p>';
+                return;
+            }
+            
+            // Simulate attention scores (random for demo)
+            const sourceWords = ["The", "cat", "sits", "on", "the", "mat"];
+            const scores = sourceWords.map(() => Math.random());
+            const total = scores.reduce((a, b) => a + b, 0);
+            const weights = scores.map(s => s / total);
+            
+            result.innerHTML = `
+                <div class="success-box" style="margin-top: 20px;">
+                    <h4>Attention Weights for "${input}":</h4>
+                    <div style="margin-top: 10px;">
+                        ${sourceWords.map((word, i) => `
+                            <div style="margin: 5px 0;">
+                                <strong>${word}:</strong> 
+                                <span style="display: inline-block; width: 200px; background: #e0e0e0; border-radius: 5px; margin-left: 10px;">
+                                    <span style="display: block; width: ${weights[i]*100}%; background: linear-gradient(90deg, #667eea, #764ba2); color: white; padding: 2px 5px; border-radius: 5px;">
+                                        ${(weights[i]*100).toFixed(1)}%
+                                    </span>
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <p style="margin-top: 15px;"><strong>Interpretation:</strong> The model would focus most on "${sourceWords[weights.indexOf(Math.max(...weights))]}" when generating "${input}"</p>
+                </div>
+            `;
+        }
+
+        // Add hover effects
+        document.querySelectorAll('.word-box').forEach(box => {
+            box.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+            });
+            box.addEventListener('mouseleave', function() {
+                if (!this.classList.contains('highlighted')) {
+                    this.style.transform = 'translateY(0)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
