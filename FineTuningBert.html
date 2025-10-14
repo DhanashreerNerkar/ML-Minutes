@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BERT Fine-Tuning Explained</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .architecture-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 968px) {
+            .architecture-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .bert-layer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .bert-layer:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .bert-layer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .bert-layer:hover::before {
+            left: 100%;
+        }
+        
+        .layer-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .layer-description {
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        .flow-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            margin: 10px;
+        }
+        
+        .step-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 2em;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .step-circle:hover {
+            transform: rotate(360deg) scale(1.1);
+        }
+        
+        .arrow {
+            font-size: 2em;
+            color: #667eea;
+            margin: 0 10px;
+        }
+        
+        .example-card {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .code-comment {
+            color: #75715e;
+        }
+        
+        .code-keyword {
+            color: #66d9ef;
+        }
+        
+        .code-string {
+            color: #a6e22e;
+        }
+        
+        .code-function {
+            color: #f92672;
+        }
+        
+        .interactive-demo {
+            background: #f0f4f8;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .demo-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            margin: 10px 0;
+            transition: border-color 0.3s;
+        }
+        
+        .demo-input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px 5px;
+        }
+        
+        .demo-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .demo-button:active {
+            transform: scale(0.95);
+        }
+        
+        .result-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .progress-step::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+        }
+        
+        .progress-step:last-child::after {
+            display: none;
+        }
+        
+        .progress-step.active .progress-circle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .progress-step.active ~ .progress-step::after {
+            background: #e0e0e0;
+        }
+        
+        .progress-step.active::after {
+            background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+        }
+        
+        .progress-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            color: #666;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .tips-section {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .tip {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #f093fb;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 BERT Fine-Tuning Mastery</h1>
+        <p class="subtitle">Understanding Architecture & Process for Interview Success</p>
+        
+        <div class="main-content">
+            <!-- Architecture Overview -->
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">📚 BERT Architecture Layers</h2>
+                
+                <div class="architecture-section">
+                    <div>
+                        <div class="bert-layer" onclick="explainLayer('embedding')">
+                            <div class="layer-title">1️⃣ Embedding Layer</div>
+                            <div class="layer-description">
+                                Converts words → numbers<br>
+                                Token + Position + Segment embeddings<br>
+                                <em>Think: Translating words to computer language</em>
+                            </div>
+                        </div>
+                        
+                        <div class="bert-layer" onclick="explainLayer('encoder')">
+                            <div class="layer-title">2️⃣ Transformer Encoders (12 layers)</div>
+                            <div class="layer-description">
+                                Self-attention mechanism<br>
+                                Understands context bidirectionally<br>
+                                <em>Think: Reading entire sentence at once</em>
+                            </div>
+                        </div>
+                        
+                        <div class="bert-layer" onclick="explainLayer('pooler')">
+                            <div class="layer-title">3️⃣ Pooler Layer</div>
+                            <div class="layer-description">
+                                Extracts [CLS] token representation<br>
+                                Creates sentence-level understanding<br>
+                                <em>Think: Summary of entire input</em>
+                            </div>
+                        </div>
+                        
+                        <div class="bert-layer" onclick="explainLayer('classifier')">
+                            <div class="layer-title">4️⃣ Task-Specific Head (Added for Fine-tuning)</div>
+                            <div class="layer-description">
+                                Linear layer + Softmax<br>
+                                Customized for your task<br>
+                                <em>Think: Specialized decision maker</em>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div id="layer-explanation" class="result-box">
+                            <h3>👆 Click any layer to understand it better!</h3>
+                            <p>Each layer plays a crucial role in understanding and processing language.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fine-Tuning Process -->
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🎯 The Fine-Tuning Process</h2>
+                
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <div class="step-circle">1</div>
+                        <strong>Load Pre-trained BERT</strong><br>
+                        <small>Get the general language model</small>
+                    </div>
+                    <span class="arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-circle">2</div>
+                        <strong>Add Task Head</strong><br>
+                        <small>Add classification layer</small>
+                    </div>
+                    <span class="arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-circle">3</div>
+                        <strong>Prepare Data</strong><br>
+                        <small>Format & tokenize</small>
+                    </div>
+                    <span class="arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-circle">4</div>
+                        <strong>Train</strong><br>
+                        <small>3-5 epochs typically</small>
+                    </div>
+                    <span class="arrow">→</span>
+                    <div class="flow-step">
+                        <div class="step-circle">5</div>
+                        <strong>Deploy</strong><br>
+                        <small>Use for predictions</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Real Example -->
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🏥 Real Example: Medical Diagnosis Assistant</h2>
+                
+                <div class="example-card">
+                    <h3>Scenario: Fine-tuning BERT to classify patient symptoms → likely conditions</h3>
+                    <p><strong>Task:</strong> Multi-class classification (Cold, Flu, COVID, Allergies)</p>
+                </div>
+                
+                <div class="code-block">
+                    <span class="code-comment"># Step 1: Load Pre-trained BERT</span><br>
+                    <span class="code-keyword">from</span> transformers <span class="code-keyword">import</span> BertForSequenceClassification, BertTokenizer<br><br>
+                    
+                    <span class="code-comment"># Load BERT with 4 output classes for our medical conditions</span><br>
+                    model = <span class="code-function">BertForSequenceClassification.from_pretrained</span>(<br>
+                    &nbsp;&nbsp;<span class="code-string">'bert-base-uncased'</span>,<br>
+                    &nbsp;&nbsp;num_labels=<span class="code-string">4</span>  <span class="code-comment"># Cold, Flu, COVID, Allergies</span><br>
+                    )<br><br>
+                    
+                    <span class="code-comment"># Step 2: Prepare your medical data</span><br>
+                    symptoms_text = <span class="code-string">"Patient has fever, dry cough, and fatigue"</span><br>
+                    label = <span class="code-string">2</span>  <span class="code-comment"># COVID-19</span><br><br>
+                    
+                    <span class="code-comment"># Step 3: Tokenize (convert text to BERT format)</span><br>
+                    tokenizer = <span class="code-function">BertTokenizer.from_pretrained</span>(<span class="code-string">'bert-base-uncased'</span>)<br>
+                    inputs = <span class="code-function">tokenizer</span>(symptoms_text, padding=<span class="code-string">True</span>, truncation=<span class="code-string">True</span>, return_tensors=<span class="code-string">"pt"</span>)<br><br>
+                    
+                    <span class="code-comment"># Step 4: Fine-tune (simplified)</span><br>
+                    outputs = <span class="code-function">model</span>(**inputs, labels=labels)<br>
+                    loss = outputs.loss<br>
+                    loss.<span class="code-function">backward</span>()  <span class="code-comment"># Update weights</span><br><br>
+                    
+                    <span class="code-comment"># Step 5: Make predictions</span><br>
+                    predictions = <span class="code-function">model</span>(**inputs)<br>
+                    predicted_class = predictions.logits.<span class="code-function">argmax</span>(-1)
+                </div>
+                
+                <div class="interactive-demo">
+                    <h3>🔬 Try It Yourself: Symptom Classifier Demo</h3>
+                    <input type="text" class="demo-input" id="symptom-input" 
+                           placeholder="Enter symptoms: e.g., 'severe headache, runny nose, sneezing'">
+                    <button class="demo-button" onclick="classifySymptoms()">Classify Symptoms</button>
+                    <div id="classification-result"></div>
+                </div>
+            </div>
+            
+            <!-- Key Concepts -->
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🎓 Interview-Ready Explanations</h2>
+                
+                <h3>Why Fine-tune Instead of Training from Scratch?</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Training from Scratch</th>
+                        <th>Fine-tuning BERT</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Needed</strong></td>
+                        <td>Millions of examples</td>
+                        <td class="highlight">Few thousand examples</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Training Time</strong></td>
+                        <td>Weeks/Months</td>
+                        <td class="highlight">Hours/Days</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cost</strong></td>
+                        <td>$10,000+ in compute</td>
+                        <td class="highlight">$10-100</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance</strong></td>
+                        <td>Often worse</td>
+                        <td class="highlight">State-of-the-art</td>
+                    </tr>
+                </table>
+                
+                <div class="tips-section">
+                    <h3>💡 Interview Tips: Key Points to Remember</h3>
+                    
+                    <div class="tip">
+                        <strong>1. Transfer Learning Analogy:</strong><br>
+                        "BERT fine-tuning is like hiring an experienced employee (pre-trained model) and giving them company-specific training (fine-tuning) rather than training someone from scratch."
+                    </div>
+                    
+                    <div class="tip">
+                        <strong>2. Technical Details to Mention:</strong><br>
+                        • Learning rate: Use smaller (2e-5 to 5e-5) to avoid catastrophic forgetting<br>
+                        • Epochs: Usually 3-5 epochs (too many causes overfitting)<br>
+                        • Batch size: 16 or 32 (memory dependent)<br>
+                        • Warmup steps: 10% of total training steps
+                    </div>
+                    
+                    <div class="tip">
+                        <strong>3. Common Fine-tuning Tasks:</strong><br>
+                        • <strong>Classification:</strong> Sentiment analysis, spam detection<br>
+                        • <strong>NER:</strong> Named Entity Recognition (finding names, locations)<br>
+                        • <strong>Question Answering:</strong> Customer support bots<br>
+                        • <strong>Text Similarity:</strong> Duplicate detection
+                    </div>
+                    
+                    <div class="tip">
+                        <strong>4. What Changes During Fine-tuning?</strong><br>
+                        • All BERT weights get slightly adjusted (not frozen)<br>
+                        • New classification head learns from scratch<br>
+                        • The model learns task-specific patterns while retaining language understanding
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step-by-Step Process -->
+            <div class="card">
+                <h2 style="color: #667eea; margin-bottom: 20px;">📋 Complete Fine-Tuning Workflow</h2>
+                
+                <div class="progress-indicator" id="workflow-progress">
+                    <div class="progress-step active" onclick="showStep(1)">
+                        <div class="progress-circle">1</div>
+                        <small>Data Prep</small>
+                    </div>
+                    <div class="progress-step" onclick="showStep(2)">
+                        <div class="progress-circle">2</div>
+                        <small>Model Setup</small>
+                    </div>
+                    <div class="progress-step" onclick="showStep(3)">
+                        <div class="progress-circle">3</div>
+                        <small>Training</small>
+                    </div>
+                    <div class="progress-step" onclick="showStep(4)">
+                        <div class="progress-circle">4</div>
+                        <small>Evaluation</small>
+                    </div>
+                    <div class="progress-step" onclick="showStep(5)">
+                        <div class="progress-circle">5</div>
+                        <small>Deployment</small>
+                    </div>
+                </div>
+                
+                <div id="step-details" class="result-box">
+                    <h3>Step 1: Data Preparation</h3>
+                    <ul>
+                        <li>Collect domain-specific data (e.g., 10,000 customer reviews)</li>
+                        <li>Split: 80% train, 10% validation, 10% test</li>
+                        <li>Format: text + label pairs</li>
+                        <li>Clean: Remove noise, handle missing values</li>
+                        <li>Balance: Ensure equal class distribution if possible</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function explainLayer(layer) {
+            const explanations = {
+                'embedding': {
+                    title: 'Embedding Layer Deep Dive',
+                    content: `<strong>Three Types of Embeddings Combined:</strong><br><br>
+                    1. <strong>Token Embeddings:</strong> Each word/subword gets a unique vector (768 dimensions in BERT-base)<br>
+                    2. <strong>Position Embeddings:</strong> Tells BERT where each word is (max 512 positions)<br>
+                    3. <strong>Segment Embeddings:</strong> Distinguishes between sentence A and B in tasks<br><br>
+                    <em>Interview Tip:</em> "BERT adds these three embeddings element-wise to create the input representation"`
+                },
+                'encoder': {
+                    title: 'Transformer Encoder Explained',
+                    content: `<strong>Each of 12 Encoder Layers Contains:</strong><br><br>
+                    1. <strong>Multi-Head Attention:</strong> Looks at all words simultaneously (12 heads in BERT-base)<br>
+                    2. <strong>Feed-Forward Network:</strong> Processes each position independently<br>
+                    3. <strong>Layer Normalization:</strong> Stabilizes training<br>
+                    4. <strong>Residual Connections:</strong> Helps with gradient flow<br><br>
+                    <em>Key Point:</em> "Bidirectional means each word can see ALL other words, unlike GPT which only sees previous words"`
+                },
+                'pooler': {
+                    title: 'Pooler Layer Function',
+                    content: `<strong>Purpose of the Pooler:</strong><br><br>
+                    1. Takes the [CLS] token's final hidden state<br>
+                    2. Applies a linear transformation + tanh activation<br>
+                    3. Creates a fixed-size sentence representation<br><br>
+                    <em>Why [CLS]?</em> "It's a special token that attends to all other tokens, becoming a natural sentence summary"<br><br>
+                    <em>Note:</em> Some tasks (like NER) don't use pooler, they use individual token representations`
+                },
+                'classifier': {
+                    title: 'Task-Specific Head (Your Addition)',
+                    content: `<strong>What You Add for Fine-tuning:</strong><br><br>
+                    1. <strong>For Classification:</strong> Linear layer (768 → num_classes) + Softmax<br>
+                    2. <strong>For NER:</strong> Linear layer on each token<br>
+                    3. <strong>For QA:</strong> Two linear layers for start/end positions<br><br>
+                    <em>Training Strategy:</em> "We train this new head from scratch while slightly adjusting all BERT weights"<br><br>
+                    <em>Dropout:</em> Usually 0.1 dropout before the classifier to prevent overfitting`
+                }
+            };
+            
+            const exp = explanations[layer];
+            document.getElementById('layer-explanation').innerHTML = `
+                <h3>${exp.title}</h3>
+                <p>${exp.content}</p>
+            `;
+        }
+        
+        function classifySymptoms() {
+            const input = document.getElementById('symptom-input').value.toLowerCase();
+            const resultDiv = document.getElementById('classification-result');
+            
+            if (!input) {
+                resultDiv.innerHTML = '<div class="result-box">Please enter some symptoms first!</div>';
+                return;
+            }
+            
+            // Simulate BERT processing
+            resultDiv.innerHTML = '<div class="result-box">🔄 Processing through BERT layers...</div>';
+            
+            setTimeout(() => {
+                let condition = 'Unknown';
+                let confidence = 0;
+                let explanation = '';
+                
+                if (input.includes('sneez') || input.includes('runny') || input.includes('itch')) {
+                    condition = 'Allergies';
+                    confidence = 0.78;
+                    explanation = 'Keywords like "sneezing" and "runny nose" strongly indicate allergic reactions';
+                } else if (input.includes('fever') && (input.includes('cough') || input.includes('tired'))) {
+                    condition = 'COVID-19';
+                    confidence = 0.65;
+                    explanation = 'Combination of fever with dry cough suggests COVID-19';
+                } else if (input.includes('fever') || input.includes('ache') || input.includes('chills')) {
+                    condition = 'Flu';
+                    confidence = 0.72;
+                    explanation = 'Body aches and fever are classic flu symptoms';
+                } else if (input.includes('sore') || input.includes('runny') || input.includes('mild')) {
+                    condition = 'Common Cold';
+                    confidence = 0.81;
+                    explanation = 'Mild symptoms without fever suggest common cold';
+                } else {
+                    condition = 'Need More Information';
+                    confidence = 0.3;
+                    explanation = 'Symptoms are unclear, would need additional context';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="result-box">
+                        <h3>🔬 BERT Classification Result:</h3>
+                        <p><strong>Predicted Condition:</strong> <span class="highlight">${condition}</span></p>
+                        <p><strong>Confidence Score:</strong> ${(confidence * 100).toFixed(1)}%</p>
+                        <p><strong>How BERT Decided:</strong> ${explanation}</p>
+                        <br>
+                        <small><em>Note: This is a simulation. Real BERT would process through all 12 transformer layers, 
+                        analyzing word relationships and context to make predictions.</em></small>
+                    </div>
+                `;
+            }, 1500);
+        }
+        
+        function showStep(step) {
+            // Update progress indicator
+            const steps = document.querySelectorAll('.progress-step');
+            steps.forEach((s, index) => {
+                if (index < step) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+            
+            const stepContents = {
+                1: {
+                    title: 'Step 1: Data Preparation',
+                    content: `
+                        <ul>
+                            <li>Collect domain-specific data (e.g., 10,000 customer reviews)</li>
+                            <li>Split: 80% train, 10% validation, 10% test</li>
+                            <li>Format: text + label pairs</li>
+                            <li>Clean: Remove noise, handle missing values</li>
+                            <li>Balance: Ensure equal class distribution if possible</li>
+                        </ul>
+                        <strong>Pro Tip:</strong> BERT can handle max 512 tokens, so truncate longer texts.
+                    `
+                },
+                2: {
+                    title: 'Step 2: Model Setup',
+                    content: `
+                        <ul>
+                            <li>Load pre-trained BERT model (bert-base-uncased or bert-large)</li>
+                            <li>Add classification head for your specific task</li>
+                            <li>Initialize tokenizer with same vocab</li>
+                            <li>Set up optimizer (AdamW) with weight decay</li>
+                            <li>Configure learning rate scheduler (linear warmup)</li>
+                        </ul>
+                        <strong>Key Decision:</strong> Choose bert-base (110M params) for speed or bert-large (340M params) for accuracy.
+                    `
+                },
+                3: {
+                    title: 'Step 3: Training Process',
+                    content: `
+                        <ul>
+                            <li>Set learning rate: 2e-5 to 5e-5 (smaller than normal)</li>
+                            <li>Batch size: 16 or 32 (based on GPU memory)</li>
+                            <li>Epochs: 3-5 (more causes overfitting)</li>
+                            <li>Use gradient accumulation if batch size is too small</li>
+                            <li>Monitor validation loss to prevent overfitting</li>
+                        </ul>
+                        <strong>Important:</strong> Save checkpoints after each epoch. Early stopping if validation loss increases.
+                    `
+                },
+                4: {
+                    title: 'Step 4: Evaluation',
+                    content: `
+                        <ul>
+                            <li>Calculate accuracy, precision, recall, F1-score</li>
+                            <li>Create confusion matrix for error analysis</li>
+                            <li>Test on held-out test set (never seen during training)</li>
+                            <li>Analyze misclassifications to understand weaknesses</li>
+                            <li>Compare with baseline models</li>
+                        </ul>
+                        <strong>Benchmark:</strong> Fine-tuned BERT typically achieves 85-95% accuracy on most text classification tasks.
+                    `
+                },
+                5: {
+                    title: 'Step 5: Deployment',
+                    content: `
+                        <ul>
+                            <li>Export model using ONNX for faster inference</li>
+                            <li>Quantization: Reduce model size (INT8 instead of FP32)</li>
+                            <li>Deploy via REST API (FastAPI/Flask)</li>
+                            <li>Set up monitoring for model drift</li>
+                            <li>Plan for periodic retraining with new data</li>
+                        </ul>
+                        <strong>Production Tip:</strong> Use distillation (DistilBERT) for 60% size reduction with only 3% accuracy loss.
+                    `
+                }
+            };
+            
+            const content = stepContents[step];
+            document.getElementById('step-details').innerHTML = `
+                <h3>${content.title}</h3>
+                ${content.content}
+            `;
+        }
+        
+        // Add some animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s, transform 0.5s';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
