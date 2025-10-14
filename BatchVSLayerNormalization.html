@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch vs Layer Normalization Explained</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        @media (max-width: 968px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .norm-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .batch-norm-card {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .layer-norm-card {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            color: white;
+        }
+        
+        .matrix-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .matrix {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .matrix-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .matrix-grid {
+            display: inline-block;
+            border: 2px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .matrix-row {
+            display: flex;
+        }
+        
+        .matrix-cell {
+            width: 60px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .matrix-header {
+            background: #667eea;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .highlight-batch {
+            background: #ffeb3b !important;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 235, 59, 0.8);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .highlight-layer {
+            background: #4fc3f7 !important;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(79, 195, 247, 0.8);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .arrow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 0 20px;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .demo-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .demo-button:active {
+            transform: scale(0.95);
+        }
+        
+        .explanation-box {
+            background: #f0f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .formula-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+        
+        .example-section {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .use-case-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .use-case-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .pros, .cons {
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .pros {
+            background: #c8e6c9;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .cons {
+            background: #ffccbc;
+            border-left: 4px solid #ff5722;
+        }
+        
+        .visual-example {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .neuron-group {
+            text-align: center;
+        }
+        
+        .neuron {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .neuron-batch {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .neuron-layer {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .animate-pulse {
+            animation: pulse 1s ease-in-out;
+        }
+        
+        .step-indicator {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .highlight-text {
+            background: #fff176;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Batch vs Layer Normalization</h1>
+        <p class="subtitle">Understanding the difference through interactive examples</p>
+        
+        <!-- Main Concept -->
+        <div class="card">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📊 The Core Concept: Student Grades Example</h2>
+            
+            <div class="example-section">
+                <h3>🎓 Imagine a Classroom:</h3>
+                <p>• <strong>Students</strong> = Data samples in your batch</p>
+                <p>• <strong>Subjects</strong> = Features/neurons in your network</p>
+                <p>• <strong>Grades</strong> = Activation values</p>
+            </div>
+            
+            <div class="matrix-container">
+                <div class="matrix">
+                    <div class="matrix-title">Original Data</div>
+                    <div class="matrix-grid" id="original-matrix">
+                        <div class="matrix-row">
+                            <div class="matrix-cell matrix-header">Student</div>
+                            <div class="matrix-cell matrix-header">Math</div>
+                            <div class="matrix-cell matrix-header">Science</div>
+                            <div class="matrix-cell matrix-header">English</div>
+                        </div>
+                        <div class="matrix-row">
+                            <div class="matrix-cell matrix-header">Alice</div>
+                            <div class="matrix-cell" data-row="0" data-col="0">85</div>
+                            <div class="matrix-cell" data-row="0" data-col="1">90</div>
+                            <div class="matrix-cell" data-row="0" data-col="2">78</div>
+                        </div>
+                        <div class="matrix-row">
+                            <div class="matrix-cell matrix-header">Bob</div>
+                            <div class="matrix-cell" data-row="1" data-col="0">92</div>
+                            <div class="matrix-cell" data-row="1" data-col="1">88</div>
+                            <div class="matrix-cell" data-row="1" data-col="2">95</div>
+                        </div>
+                        <div class="matrix-row">
+                            <div class="matrix-cell matrix-header">Carol</div>
+                            <div class="matrix-cell" data-row="2" data-col="0">78</div>
+                            <div class="matrix-cell" data-row="2" data-col="1">82</div>
+                            <div class="matrix-cell" data-row="2" data-col="2">89</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <button class="demo-button" onclick="showBatchNorm()">🔵 Show Batch Normalization</button>
+                <button class="demo-button" onclick="showLayerNorm()">🟢 Show Layer Normalization</button>
+                <button class="demo-button" onclick="resetDemo()">↻ Reset</button>
+            </div>
+            
+            <div id="explanation" class="explanation-box">
+                <p>Click the buttons above to see how each normalization works!</p>
+            </div>
+        </div>
+        
+        <!-- Comparison -->
+        <div class="card">
+            <h2 style="color: #667eea; margin-bottom: 20px;">⚖️ Side-by-Side Comparison</h2>
+            
+            <div class="comparison-grid">
+                <div class="batch-norm-card norm-card">
+                    <h3 style="color: #d84315;">🔵 Batch Normalization</h3>
+                    
+                    <div class="formula-box">
+                        Normalize(x) = (x - μ_batch) / σ_batch
+                    </div>
+                    
+                    <h4>How it works:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li>Calculates mean & variance <span class="highlight-text">across the batch</span></li>
+                        <li>For Math: Average of Alice(85) + Bob(92) + Carol(78)</li>
+                        <li>Each feature normalized independently</li>
+                        <li>Compares students to each other</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 15px;">When to use:</h4>
+                    <div class="use-case-card" style="margin-top: 10px;">
+                        <div class="icon">🖼️</div>
+                        <strong>CNNs / Image Processing</strong>
+                        <p>Works great with fixed batch sizes and spatial data</p>
+                    </div>
+                </div>
+                
+                <div class="layer-norm-card norm-card">
+                    <h3>🟢 Layer Normalization</h3>
+                    
+                    <div class="formula-box">
+                        Normalize(x) = (x - μ_layer) / σ_layer
+                    </div>
+                    
+                    <h4>How it works:</h4>
+                    <ul style="line-height: 1.8;">
+                        <li>Calculates mean & variance <span class="highlight-text">across features</span></li>
+                        <li>For Alice: Average of Math(85) + Science(90) + English(78)</li>
+                        <li>Each sample normalized independently</li>
+                        <li>Compares subjects within same student</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 15px;">When to use:</h4>
+                    <div class="use-case-card" style="margin-top: 10px; background: rgba(255,255,255,0.2);">
+                        <div class="icon">📝</div>
+                        <strong>RNNs / Transformers / NLP</strong>
+                        <p>Perfect for sequences and variable batch sizes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Visual Neural Network Example -->
+        <div class="card">
+            <h2 style="color: #667eea; margin-bottom: 20px;">🧠 Neural Network Visualization</h2>
+            
+            <div class="visual-example">
+                <div class="neuron-group">
+                    <h4>Batch Norm</h4>
+                    <p style="margin-bottom: 15px;">Normalizes vertically ↓</p>
+                    <div>
+                        <div class="neuron neuron-batch" id="bn1">N1</div>
+                        <div class="neuron neuron-batch" id="bn2">N2</div>
+                        <div class="neuron neuron-batch" id="bn3">N3</div>
+                    </div>
+                    <div>
+                        <div class="neuron neuron-batch" id="bn4">N1</div>
+                        <div class="neuron neuron-batch" id="bn5">N2</div>
+                        <div class="neuron neuron-batch" id="bn6">N3</div>
+                    </div>
+                    <div>
+                        <div class="neuron neuron-batch" id="bn7">N1</div>
+                        <div class="neuron neuron-batch" id="bn8">N2</div>
+                        <div class="neuron neuron-batch" id="bn9">N3</div>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.9em;">Batch samples →</p>
+                </div>
+                
+                <div class="neuron-group">
+                    <h4>Layer Norm</h4>
+                    <p style="margin-bottom: 15px;">Normalizes horizontally →</p>
+                    <div>
+                        <div class="neuron neuron-layer" id="ln1">N1</div>
+                        <div class="neuron neuron-layer" id="ln2">N2</div>
+                        <div class="neuron neuron-layer" id="ln3">N3</div>
+                    </div>
+                    <div>
+                        <div class="neuron neuron-layer" id="ln4">N1</div>
+                        <div class="neuron neuron-layer" id="ln5">N2</div>
+                        <div class="neuron neuron-layer" id="ln6">N3</div>
+                    </div>
+                    <div>
+                        <div class="neuron neuron-layer" id="ln7">N1</div>
+                        <div class="neuron neuron-layer" id="ln8">N2</div>
+                        <div class="neuron neuron-layer" id="ln9">N3</div>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.9em;">Batch samples →</p>
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <button class="demo-button" onclick="animateBatchNorm()">Animate Batch Norm</button>
+                <button class="demo-button" onclick="animateLayerNorm()">Animate Layer Norm</button>
+            </div>
+        </div>
+        
+        <!-- Real-World Examples -->
+        <div class="card">
+            <h2 style="color: #667eea; margin-bottom: 20px;">🌍 Real-World Applications</h2>
+            
+            <div class="use-case-grid">
+                <div class="use-case-card">
+                    <div class="icon">🖼️</div>
+                    <h4>Image Classification (CNN)</h4>
+                    <p><strong>Use: Batch Normalization</strong></p>
+                    <p>Why: Large, consistent batch sizes. Each channel (feature) should have consistent statistics across images.</p>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="icon">🤖</div>
+                    <h4>GPT/BERT (Transformers)</h4>
+                    <p><strong>Use: Layer Normalization</strong></p>
+                    <p>Why: Variable sequence lengths, small batch sizes. Each token's representation should be normalized.</p>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="icon">🎵</div>
+                    <h4>Music Generation (RNN)</h4>
+                    <p><strong>Use: Layer Normalization</strong></p>
+                    <p>Why: Sequential processing, batch size might be 1. Need stability across time steps.</p>
+                </div>
+                
+                <div class="use-case-card">
+                    <div class="icon">🏥</div>
+                    <h4>Medical Image Segmentation</h4>
+                    <p><strong>Use: Batch Normalization</strong></p>
+                    <p>Why: Consistent image sizes, stable batch statistics help with precise pixel classification.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pros and Cons -->
+        <div class="card">
+            <h2 style="color: #667eea; margin-bottom: 20px;">✅ Pros and Cons</h2>
+            
+            <h3>Batch Normalization</h3>
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros:</h4>
+                    <ul>
+                        <li>Reduces internal covariate shift</li>
+                        <li>Allows higher learning rates</li>
+                        <li>Acts as regularization (reduces overfitting)</li>
+                        <li>Speeds up training significantly</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons:</h4>
+                    <ul>
+                        <li>Requires large batch sizes (≥16)</li>
+                        <li>Different behavior in train vs test</li>
+                        <li>Not suitable for RNNs</li>
+                        <li>Problems with batch size = 1</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 30px;">Layer Normalization</h3>
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✅ Pros:</h4>
+                    <ul>
+                        <li>Works with any batch size (even 1)</li>
+                        <li>Same computation for train/test</li>
+                        <li>Perfect for RNNs and Transformers</li>
+                        <li>No dependency between samples</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>❌ Cons:</h4>
+                    <ul>
+                        <li>Less effective for CNNs</li>
+                        <li>No regularization effect</li>
+                        <li>May not reduce covariate shift as well</li>
+                        <li>Slightly more computation per sample</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Takeaways -->
+        <div class="card">
+            <h2 style="color: #667eea; margin-bottom: 20px;">💡 Key Takeaways</h2>
+            
+            <div class="explanation-box">
+                <h3>Remember This Simple Rule:</h3>
+                <p style="font-size: 1.2em; line-height: 1.8;">
+                    <strong>Batch Norm:</strong> "How did <span class="highlight-text">everyone</span> do on this test?" (Compare across batch)<br>
+                    <strong>Layer Norm:</strong> "How did <span class="highlight-text">John</span> do across all tests?" (Compare within sample)
+                </p>
+            </div>
+            
+            <div class="step-indicator">
+                <p>🎯 <strong>Quick Decision Guide:</strong></p>
+                <p>Working with images/CNNs? → Use <strong>Batch Norm</strong></p>
+                <p>Working with sequences/text? → Use <strong>Layer Norm</strong></p>
+                <p>Variable batch sizes? → Use <strong>Layer Norm</strong></p>
+                <p>Need regularization? → Use <strong>Batch Norm</strong></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showBatchNorm() {
+            // Reset highlights
+            resetDemo();
+            
+            // Highlight columns (features)
+            const cells = document.querySelectorAll('[data-col]');
+            
+            // Animate column by column
+            setTimeout(() => {
+                cells.forEach(cell => {
+                    if (cell.dataset.col === '0') {
+                        cell.classList.add('highlight-batch');
+                    }
+                });
+                updateExplanation('batch', 0);
+            }, 100);
+            
+            setTimeout(() => {
+                cells.forEach(cell => {
+                    cell.classList.remove('highlight-batch');
+                    if (cell.dataset.col === '1') {
+                        cell.classList.add('highlight-batch');
+                    }
+                });
+                updateExplanation('batch', 1);
+            }, 1500);
+            
+            setTimeout(() => {
+                cells.forEach(cell => {
+                    cell.classList.remove('highlight-batch');
+                    if (cell.dataset.col === '2') {
+                        cell.classList.add('highlight-batch');
+                    }
+                });
+                updateExplanation('batch', 2);
+            }, 3000);
+        }
+        
+        function showLayerNorm() {
+            // Reset highlights
+            resetDemo();
+            
+            // Highlight rows (samples)
+            const cells = document.querySelectorAll('[data-row]');
+            
+            // Animate row by row
+            setTimeout(() => {
+                cells.forEach(cell => {
+                    if (cell.dataset.row === '0') {
+                        cell.classList.add('highlight-layer');
+                    }
+                });
+                updateExplanation('layer', 0);
+            }, 100);
+            
+            setTimeout(() => {
+                cells.forEach(cell => {
+                    cell.classList.remove('highlight-layer');
+                    if (cell.dataset.row === '1') {
+                        cell.classList.add('highlight-layer');
+                    }
+                });
+                updateExplanation('layer', 1);
+            }, 1500);
+            
+            setTimeout(() => {
+                cells.forEach(cell => {
+                    cell.classList.remove('highlight-layer');
+                    if (cell.dataset.row === '2') {
+                        cell.classList.add('highlight-layer');
+                    }
+                });
+                updateExplanation('layer', 2);
+            }, 3000);
+        }
+        
+        function resetDemo() {
+            const cells = document.querySelectorAll('.matrix-cell');
+            cells.forEach(cell => {
+                cell.classList.remove('highlight-batch', 'highlight-layer');
+            });
+            document.getElementById('explanation').innerHTML = 
+                '<p>Click the buttons above to see how each normalization works!</p>';
+        }
+        
+        function updateExplanation(type, index) {
+            const explanationDiv = document.getElementById('explanation');
+            
+            if (type === 'batch') {
+                const subjects = ['Math', 'Science', 'English'];
+                const values = [
+                    [85, 92, 78],
+                    [90, 88, 82],
+                    [78, 95, 89]
+                ];
+                const mean = (values[index][0] + values[index][1] + values[index][2]) / 3;
+                
+                explanationDiv.innerHTML = `
+                    <h3>🔵 Batch Normalization - ${subjects[index]}</h3>
+                    <p>Normalizing <strong>${subjects[index]}</strong> scores across all students:</p>
+                    <p>• Alice: ${values[index][0]}, Bob: ${values[index][1]}, Carol: ${values[index][2]}</p>
+                    <p>• Mean = ${mean.toFixed(1)}</p>
+                    <p>• Calculate variance, then normalize each student's ${subjects[index]} score</p>
+                    <p><strong>Result:</strong> All students' ${subjects[index]} scores now have mean=0, std=1</p>
+                `;
+            } else {
+                const students = ['Alice', 'Bob', 'Carol'];
+                const values = [
+                    [85, 90, 78],
+                    [92, 88, 95],
+                    [78, 82, 89]
+                ];
+                const mean = (values[index][0] + values[index][1] + values[index][2]) / 3;
+                
+                explanationDiv.innerHTML = `
+                    <h3>🟢 Layer Normalization - ${students[index]}</h3>
+                    <p>Normalizing <strong>${students[index]}'s</strong> scores across all subjects:</p>
+                    <p>• Math: ${values[index][0]}, Science: ${values[index][1]}, English: ${values[index][2]}</p>
+                    <p>• Mean = ${mean.toFixed(1)}</p>
+                    <p>• Calculate variance, then normalize all of ${students[index]}'s scores</p>
+                    <p><strong>Result:</strong> ${students[index]}'s scores now have mean=0, std=1 across subjects</p>
+                `;
+            }
+        }
+        
+        function animateBatchNorm() {
+            // Animate batch norm neurons (vertical groups)
+            const groups = [[1, 4, 7], [2, 5, 8], [3, 6, 9]];
+            groups.forEach((group, idx) => {
+                setTimeout(() => {
+                    group.forEach(id => {
+                        const neuron = document.getElementById(`bn${id}`);
+                        neuron.classList.add('animate-pulse');
+                        neuron.style.background = 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
+                    });
+                    
+                    setTimeout(() => {
+                        group.forEach(id => {
+                            const neuron = document.getElementById(`bn${id}`);
+                            neuron.classList.remove('animate-pulse');
+                            neuron.style.background = '';
+                        });
+                    }, 1000);
+                }, idx * 1000);
+            });
+        }
+        
+        function animateLayerNorm() {
+            // Animate layer norm neurons (horizontal groups)
+            const groups = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+            groups.forEach((group, idx) => {
+                setTimeout(() => {
+                    group.forEach(id => {
+                        const neuron = document.getElementById(`ln${id}`);
+                        neuron.classList.add('animate-pulse');
+                        neuron.style.background = 'linear-gradient(135deg, #00FF00 0%, #00CC00 100%)';
+                    });
+                    
+                    setTimeout(() => {
+                        group.forEach(id => {
+                            const neuron = document.getElementById(`ln${id}`);
+                            neuron.classList.remove('animate-pulse');
+                            neuron.style.background = '';
+                        });
+                    }, 1000);
+                }, idx * 1000);
+            });
+        }
+        
+        // Add initial animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s, transform 0.5s';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
