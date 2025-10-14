@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Interview Revision Notebook</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .notebook-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: white;
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .notebook-lines {
+            background-image: repeating-linear-gradient(
+                white,
+                white 39px,
+                #e0e0e0 39px,
+                #e0e0e0 40px
+            );
+            padding: 40px;
+        }
+        
+        .toc-section {
+            margin-bottom: 40px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-icon {
+            font-size: 1.2em;
+        }
+        
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .concept-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .concept-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .concept-link:hover::before {
+            left: 100%;
+        }
+        
+        .concept-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .concept-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+            color: #667eea;
+            flex-shrink: 0;
+        }
+        
+        .concept-link:hover .concept-number {
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .concept-name {
+            flex: 1;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+        
+        .progress-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            color: #667eea;
+            z-index: 1000;
+        }
+        
+        .quick-nav {
+            position: sticky;
+            top: 20px;
+            float: right;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+            margin-bottom: 20px;
+            max-width: 200px;
+        }
+        
+        .quick-nav h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .quick-nav-link {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #666;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .quick-nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            margin: 20px 40px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .quick-nav {
+                display: none;
+            }
+            
+            .concept-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .footer strong {
+            color: #667eea;
+        }
+        
+        /* Animation for page load */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .toc-section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .toc-section:nth-child(1) { animation-delay: 0.1s; }
+        .toc-section:nth-child(2) { animation-delay: 0.2s; }
+        .toc-section:nth-child(3) { animation-delay: 0.3s; }
+        .toc-section:nth-child(4) { animation-delay: 0.4s; }
+        .toc-section:nth-child(5) { animation-delay: 0.5s; }
+        .toc-section:nth-child(6) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="notebook-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📚 ML Interview Revision Notebook</h1>
+            <p class="subtitle">Your comprehensive guide to Machine Learning concepts</p>
+        </div>
+        
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">37</div>
+                <div class="stat-label">Total Concepts</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Interview Ready</div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="notebook-lines">
+            <!-- Quick Navigation -->
+            <div class="quick-nav">
+                <h3>Quick Jump</h3>
+                <a href="#fundamentals" class="quick-nav-link">🎯 Fundamentals</a>
+                <a href="#nn-components" class="quick-nav-link">🧠 Neural Networks</a>
+                <a href="#training" class="quick-nav-link">⚙️ Training</a>
+                <a href="#architectures" class="quick-nav-link">🏗️ Architectures</a>
+                <a href="#evaluation" class="quick-nav-link">📊 Evaluation</a>
+                <a href="#advanced" class="quick-nav-link">🚀 Advanced</a>
+            </div>
+            
+            <!-- Section 1: Fundamentals -->
+            <div class="toc-section" id="fundamentals">
+                <h2 class="section-title">
+                    <span class="section-icon">🎯</span>
+                    Machine Learning Fundamentals
+                </h2>
+                <div class="concept-grid">
+                    <a href="ActivationFunctions.html" class="concept-link">
+                        <span class="concept-number">1</span>
+                        <span class="concept-name">Activation Functions</span>
+                    </a>
+                    <a href="LogisticRegression.html" class="concept-link">
+                        <span class="concept-number">2</span>
+                        <span class="concept-name">Logistic Regression</span>
+                    </a>
+                    <a href="GradientDescent.html" class="concept-link">
+                        <span class="concept-number">3</span>
+                        <span class="concept-name">Gradient Descent</span>
+                    </a>
+                    <a href="GradientBoosting_70_XGBoost.html" class="concept-link">
+                        <span class="concept-number">4</span>
+                        <span class="concept-name">Gradient Boosting & XGBoost</span>
+                    </a>
+                    <a href="LossFunction.html" class="concept-link">
+                        <span class="concept-number">5</span>
+                        <span class="concept-name">Loss Functions</span>
+                    </a>
+                    <a href="L1Loss.html" class="concept-link">
+                        <span class="concept-number">6</span>
+                        <span class="concept-name">L1 Loss</span>
+                    </a>
+                    <a href="L2Loss.html" class="concept-link">
+                        <span class="concept-number">7</span>
+                        <span class="concept-name">L2 Loss</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Section 2: Neural Network Components -->
+            <div class="toc-section" id="nn-components">
+                <h2 class="section-title">
+                    <span class="section-icon">🧠</span>
+                    Neural Network Components
+                </h2>
+                <div class="concept-grid">
+                    <a href="BackPropagation.html" class="concept-link">
+                        <span class="concept-number">8</span>
+                        <span class="concept-name">Backpropagation</span>
+                    </a>
+                    <a href="BatchVsLayerNormalization.html" class="concept-link">
+                        <span class="concept-number">9</span>
+                        <span class="concept-name">Batch vs Layer Normalization</span>
+                    </a>
+                    <a href="AttentionMechanism.html" class="concept-link">
+                        <span class="concept-number">10</span>
+                        <span class="concept-name">Attention Mechanism</span>
+                    </a>
+                    <a href="RecallPrecision.html" class="concept-link">
+                        <span class="concept-number">11</span>
+                        <span class="concept-name">Recall & Precision</span>
+                    </a>
+                    <a href="Multicollinearity.html" class="concept-link">
+                        <span class="concept-number">12</span>
+                        <span class="concept-name">Multicollinearity</span>
+                    </a>
+                    <a href="Neural_Network_Components.html" class="concept-link">
+                        <span class="concept-number">13</span>
+                        <span class="concept-name">Neural Network Components</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Section 3: Training & Optimization -->
+            <div class="toc-section" id="training">
+                <h2 class="section-title">
+                    <span class="section-icon">⚙️</span>
+                    Training & Optimization
+                </h2>
+                <div class="concept-grid">
+                    <a href="LearningRate15Momentum.html" class="concept-link">
+                        <span class="concept-number">14</span>
+                        <span class="concept-name">Learning Rate & Momentum</span>
+                    </a>
+                    <a href="BaggingBoosting.html" class="concept-link">
+                        <span class="concept-number">15</span>
+                        <span class="concept-name">Bagging & Boosting</span>
+                    </a>
+                    <a href="CrossValidation.html" class="concept-link">
+                        <span class="concept-number">16</span>
+                        <span class="concept-name">Cross Validation</span>
+                    </a>
+                    <a href="Regularization.html" class="concept-link">
+                        <span class="concept-number">17</span>
+                        <span class="concept-name">Regularization</span>
+                    </a>
+                    <a href="HyperparameterTuning.html" class="concept-link">
+                        <span class="concept-number">18</span>
+                        <span class="concept-name">Hyperparameter Tuning</span>
+                    </a>
+                    <a href="FineTuningBert.html" class="concept-link">
+                        <span class="concept-number">19</span>
+                        <span class="concept-name">Fine-Tuning BERT</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Section 4: Model Architectures -->
+            <div class="toc-section" id="architectures">
+                <h2 class="section-title">
+                    <span class="section-icon">🏗️</span>
+                    Model Architectures
+                </h2>
+                <div class="concept-grid">
+                    <a href="Transformers.html" class="concept-link">
+                        <span class="concept-number">20</span>
+                        <span class="concept-name">Transformers</span>
+                    </a>
+                    <a href="SentenceTransformers.html" class="concept-link">
+                        <span class="concept-number">21</span>
+                        <span class="concept-name">Sentence Transformers</span>
+                    </a>
+                    <a href="Generative_DiscriminativeModels.html" class="concept-link">
+                        <span class="concept-number">22</span>
+                        <span class="concept-name">Generative vs Discriminative Models</span>
+                    </a>
+                    <a href="Supervise_Unsupervised.html" class="concept-link">
+                        <span class="concept-number">23</span>
+                        <span class="concept-name">Supervised vs Unsupervised</span>
+                    </a>
+                    <a href="HiddenMarkovModel.html" class="concept-link">
+                        <span class="concept-number">24</span>
+                        <span class="concept-name">Hidden Markov Model</span>
+                    </a>
+                    <a href="XGBoostFromCandidateRankingModelView.html" class="concept-link">
+                        <span class="concept-number">25</span>
+                        <span class="concept-name">XGBoost Candidate Ranking</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Section 5: Evaluation & Metrics -->
+            <div class="toc-section" id="evaluation">
+                <h2 class="section-title">
+                    <span class="section-icon">📊</span>
+                    Evaluation & Metrics
+                </h2>
+                <div class="concept-grid">
+                    <a href="ConfusionMatrix.html" class="concept-link">
+                        <span class="concept-number">26</span>
+                        <span class="concept-name">Confusion Matrix</span>
+                    </a>
+                    <a href="P_Libraries.html" class="concept-link">
+                        <span class="concept-number">27</span>
+                        <span class="concept-name">Python Libraries</span>
+                    </a>
+                    <a href="R_Squared.html" class="concept-link">
+                        <span class="concept-number">28</span>
+                        <span class="concept-name">R-Squared</span>
+                    </a>
+                    <a href="MissingValueImputation.html" class="concept-link">
+                        <span class="concept-number">29</span>
+                        <span class="concept-name">Missing Value Imputation</span>
+                    </a>
+                    <a href="ReluFunction.html" class="concept-link">
+                        <span class="concept-number">30</span>
+                        <span class="concept-name">ReLU Function</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Section 6: Advanced Topics -->
+            <div class="toc-section" id="advanced">
+                <h2 class="section-title">
+                    <span class="section-icon">🚀</span>
+                    Advanced Topics
+                </h2>
+                <div class="concept-grid">
+                    <a href="BayesianOptimizationVSInference.html" class="concept-link">
+                        <span class="concept-number">31</span>
+                        <span class="concept-name">Bayesian Optimization vs Inference</span>
+                    </a>
+                    <a href="KMeansClustering.html" class="concept-link">
+                        <span class="concept-number">32</span>
+                        <span class="concept-name">K-Means Clustering</span>
+                    </a>
+                    <a href="KMeansClustering_01.html" class="concept-link">
+                        <span class="concept-number">33</span>
+                        <span class="concept-name">K-Means Clustering (Advanced)</span>
+                    </a>
+                    <a href="InductiveDeductiveLearning.html" class="concept-link">
+                        <span class="concept-number">34</span>
+                        <span class="concept-name">Inductive vs Deductive Learning</span>
+                    </a>
+                    <a href="MLInterviewTopics.html" class="concept-link">
+                        <span class="concept-number">35</span>
+                        <span class="concept-name">ML Interview Topics</span>
+                    </a>
+                    <a href="MLLearningPath.html" class="concept-link">
+                        <span class="concept-number">36</span>
+                        <span class="concept-name">ML Learning Path</span>
+                    </a>
+                    <a href="Gini_Impurity_Entropy.html" class="concept-link">
+                        <span class="concept-number">37</span>
+                        <span class="concept-name">Gini Impurity & Entropy</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>ML Interview Revision Notebook</strong> | Total Topics: 37</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">💡 Tip: Review 3-5 topics daily for optimal retention</p>
+        </div>
+    </div>
+    
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+        📚 37 Concepts Ready
+    </div>
+    
+    <script>
+        // Add smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Track visited links (optional - uses localStorage)
+        document.querySelectorAll('.concept-link').forEach(link => {
+            link.addEventListener('click', function() {
+                this.style.opacity = '0.7';
+                localStorage.setItem(this.href, 'visited');
+            });
+            
+            // Check if already visited
+            if (localStorage.getItem(link.href) === 'visited') {
+                link.style.opacity = '0.7';
+            }
+        });
+        
+        // Add hover effect to show description (optional enhancement)
+        document.querySelectorAll('.concept-link').forEach(link => {
+            link.title = "Click to study this concept";
+        });
+    </script>
+</body>
+</html>
